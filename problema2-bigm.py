@@ -34,8 +34,8 @@ def solve_transportation_problem():
             4*X21 + 6*X22 + 3*X23 + 5*X24 + 8*X25 + \
             7*X31 + 4*X32 + 2*X33 + 6*X34 + 3*X35, "Custo Total"
 
-    # Restrições de capacidade das fábricas
-    prob += X11 + X12 + X13 + X14 + X15 <= 100, "Capacidade_Fábrica_1"
+    # Restrições de capacidade das fábricas (F1 ajustada para 110)
+    prob += X11 + X12 + X13 + X14 + X15 <= 110, "Capacidade_Fábrica_1"
     prob += X21 + X22 + X23 + X24 + X25 <= 150, "Capacidade_Fábrica_2"
     prob += X31 + X32 + X33 + X34 + X35 <= 200, "Capacidade_Fábrica_3"
 
