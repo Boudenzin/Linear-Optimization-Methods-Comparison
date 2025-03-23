@@ -61,24 +61,20 @@ Para executar os scripts deste repositório, siga as etapas abaixo:
 ---
 
 ## **Uso**
-O repositório contém um script principal (`main.py`) que gera problemas de PL de diferentes escalas e compara os métodos simplex revisado e Big M.
+O repositório contém vários scripts de código, escolha o que quer executar.
 
 ### **Executando o Script**
 ```bash
-python main.py
+python [nome-do-arquivo].py
 ```
 
 ### **Exemplo de Saída**
 ```plaintext
-📊 Comparando para 10 variáveis e 10 restrições
+Tempo de execução: 0.125915 s
+Uso de memória: 0.589844 MB
+Valor ótimo encontrado: 7.000000
+x = 3.000, y = 2.000, a1 = 0.000
 
-🔷 Big M (CBC via PuLP)
-Tempo: 0.123456s | Memória: 50.23MB
-Valor ótimo: 123.456 | Iterações: N/A
-
-🔶 Revised Simplex (HiGHS via SciPy)
-Tempo: 0.098765s | Memória: 45.67MB
-Valor ótimo: 123.456 | Iterações: 15
 ```
 
 ---
@@ -87,8 +83,6 @@ Valor ótimo: 123.456 | Iterações: 15
 Os resultados da comparação são apresentados em tabelas e gráficos, destacando:
 - Tempo de execução.
 - Uso de memória.
-- Número de iterações.
-- Precisão das soluções.
 
 ### **Exemplo de Gráfico**
 ![Gráfico de Comparação](https://via.placeholder.com/600x400)  
