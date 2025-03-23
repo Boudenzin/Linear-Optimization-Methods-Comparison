@@ -1,0 +1,5 @@
+psutil
+setuptools
+scipy
+pulp
+matplotlib
