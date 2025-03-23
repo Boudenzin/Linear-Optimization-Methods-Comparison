@@ -1,0 +1,51 @@
+
+REVISED 1
+Solução ótima: x = 3.000, y = 2.000
+Tempo de execução: 0.001317 segundos
+Uso de memória: 0.250000 MB
+
+BIG M 1
+
+Tempo de execução: 0.125915 s
+Uso de memória: 0.589844 MB
+Valor ótimo encontrado: 7.000000
+x = 3.000, y = 2.000, a1 = 0.000
+
+REVISED 2
+
+Tempo de execução: 0.030453 s
+Uso de memória: 1.78 MB
+Status: Optimization terminated successfully. (HiGHS Status 7: Optimal)
+Valor ótimo encontrado: 1390.000000
+
+BIG M 2
+
+Tempo de execução: 0.058910 s
+Uso de memória: 0.59 MB
+Valor ótimo encontrado: 1390.000000
+
+BIG M 3 INVIAVEL
+
+Status: Infeasible
+Tempo de Execução: 0.12 segundos
+Uso de Memória: 32.03 MB
+
+REVISED 3 INVIAVEL
+
+A solução não foi encontrada.
+Tempo de Execução: 1.14 segundos
+Uso de Memória: 6.93 MB
+
+BIG 3 VIAVEL
+
+Custo Total Ótimo: R$ 207866.00
+Tempo de Execução: 0.95 segundos
+Uso de Memória: 31.91 MB
+
+
+REVISED 3 VIAVEL
+
+Status: Optimal
+Custo Total Ótimo: R$ 207866.00
+Tempo de Execução: 0.43 segundos
+Uso de Memória: 31.85 MB
