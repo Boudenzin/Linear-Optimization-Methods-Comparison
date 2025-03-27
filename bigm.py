@@ -34,7 +34,7 @@ def solve_big_m_manual():
     memory_used = mem_after - mem_before
 
     # Resultados
-    print(f"\n### Big M (Manual) a ###")
+    print(f"\n### Big M (Manual) ###")
     print(f"Tempo de execução: {end_time - start_time:.6f} s")
     print(f"Uso de memória: {memory_used:.6f} MB")
     print(f"Valor ótimo encontrado: {pulp.value(prob.objective):.6f}")
