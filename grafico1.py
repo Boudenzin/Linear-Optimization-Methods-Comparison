@@ -12,8 +12,8 @@ index = np.arange(len(testes))
 
 # Criar a figura
 plt.figure(figsize=(10, 6))
-bars1 = plt.bar(index, tempo_revised, bar_width, label='Simplex Revisado', color='steelblue')
-bars2 = plt.bar(index + bar_width, tempo_big_m, bar_width, label='Big M', color='darkorange')
+bars1 = plt.bar(index, tempo_revised, bar_width, label='Simplex Revisado', color='gray')
+bars2 = plt.bar(index + bar_width, tempo_big_m, bar_width, label='Big M', color='black')
 
 # Adicionar valores acima das barras
 for bar in bars1:
