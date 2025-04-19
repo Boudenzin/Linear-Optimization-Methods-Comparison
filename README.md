@@ -84,9 +84,12 @@ Os resultados da comparação são apresentados em tabelas e gráficos, destacan
 - Tempo de execução.
 - Uso de memória.
 
-### **Exemplo de Gráfico**
-![Gráfico de Comparação](https://via.placeholder.com/600x400)  
+### **Gráficos**
+![Gráfico de Comparação - Tempo de Execução](imgs/tempo_execucao_comparacao_colorido.png)  
 *Tempo de execução dos métodos em diferentes escalas de problemas.*
+
+![Gráfico de Comparação - Uso de Memória](imgs/uso_memoria_comparacao_colorido.png)  
+*Uso de memória dos métodos em diferentes cenários.*
 
 ---
 
