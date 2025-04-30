@@ -1,118 +1,109 @@
 # Importação das bibliotecas necessárias
-import pulp  # Biblioteca para modelar e resolver problemas de Programação Linear e Inteira
-import time  # Biblioteca para medir o tempo de execução
-import psutil  # Biblioteca para medir o uso de memória do processo
+import numpy as np
+import pulp
+import time
+import psutil
+import os
 
-# Início da contagem de tempo para medir desempenho
-start_time = time.time()
+def problema_balanceamento_producao_big_m():
+    """
+    Gera e resolve o problema de balanceamento de produção usando a técnica Big M,
+    adicionando variáveis artificiais nas restrições de atendimento dos centros.
+    """
 
-# -----------------------------
-# Definição dos dados do problema
-# -----------------------------
+    # Iniciar a medição de tempo
+    start_time = time.time()
 
-n_produtos = 10  # Número de produtos considerados
-n_meses = 12     # Número de meses para planejamento de produção
-capacidade_producao = 2000  # Capacidade de produção total permitida por mês
-M = 10000  # Valor grande usado no método Big M para vincular produção e decisão binária
+    # Iniciar a medição de memória
+    process = psutil.Process(os.getpid())
+    mem_before = process.memory_info().rss / (1024 ** 2)  # Memória em MB
 
-# Custos de produção: aumentam conforme o número do produto e o mês
-custos_producao = {(i, t): 10 + i + t for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)}
+    # -----------------------------
+    # Definição dos parâmetros do problema
+    # -----------------------------
 
-# Custos de armazenamento de estoque: aumentam conforme produto e mês
-custos_estoque = {(i, t): 2 + 0.5 * i + 0.1 * t for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)}
+    n_fabricas = 15  # Número de fábricas
+    n_centros = 10   # Número de centros de distribuição
 
-# Custos fixos para iniciar a produção de um produto (valores reduzidos)
-custos_fixos = {i: 50 * i for i in range(1, n_produtos + 1)}
+    n_variaveis = n_fabricas * n_centros
 
-# Demanda por produto e por mês (valores relativamente menores)
-demandas = {(i, t): 20 + 2 * i + 5 * t for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)}
+    # Gerar custos aleatórios de transporte (entre 10 e 100)
+    np.random.seed(42)
+    custos = np.random.randint(10, 100, size=n_variaveis)
 
-# -----------------------------
-# Criação do modelo de otimização
-# -----------------------------
+    # Gerar capacidades das fábricas (entre 500 e 1500)
+    capacidades_fabricas = np.random.randint(500, 1500, size=n_fabricas)
 
-# Define o problema como de minimização (minimizar os custos)
-prob = pulp.LpProblem("Planejamento_Producao_Com_Custos_Fixos", pulp.LpMinimize)
+    # Gerar demandas dos centros (entre 200 e 800)
+    demandas_centros = np.random.randint(200, 800, size=n_centros)
 
-# Variáveis de decisão:
-# X[i,t]: quantidade produzida do produto i no mês t
-# S[i,t]: quantidade em estoque do produto i ao final do mês t
-# Y[i,t]: variável binária que indica se o produto i foi produzido no mês t
-X = pulp.LpVariable.dicts("Producao", ((i, t) for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)), lowBound=0, cat="Continuous")
-S = pulp.LpVariable.dicts("Estoque", ((i, t) for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)), lowBound=0, cat="Continuous")
-Y = pulp.LpVariable.dicts("Producao_Binaria", ((i, t) for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)), cat="Binary")
+    # Valor grande para penalizar variáveis artificiais (Big M)
+    M = 10000
 
-# -----------------------------
-# Definição da função objetivo
-# -----------------------------
+    # -----------------------------
+    # Modelagem do problema usando PuLP
+    # -----------------------------
 
-# A função objetivo minimiza o custo total:
-# Custo de produção + Custo de armazenagem + Custo fixo para iniciar a produção
-prob += pulp.lpSum(
-    custos_producao[(i, t)] * X[(i, t)] +
-    custos_estoque[(i, t)] * S[(i, t)] +
-    custos_fixos[i] * Y[(i, t)]
-    for i in range(1, n_produtos + 1)
-    for t in range(1, n_meses + 1)
-)
+    # Criar o problema de minimização
+    prob = pulp.LpProblem("Balanceamento_Producao_BigM", pulp.LpMinimize)
 
-# -----------------------------
-# Definição das restrições
-# -----------------------------
+    # Variáveis de decisão: quantidade enviada da fábrica i para centro j
+    X = pulp.LpVariable.dicts("Envio", ((i, j) for i in range(n_fabricas) for j in range(n_centros)), lowBound=0)
 
-# 1. Balanço de estoque: produz, armazena ou atende a demanda de cada produto a cada mês
-for i in range(1, n_produtos + 1):
-    for t in range(1, n_meses + 1):
-        if t == 1:
-            # No primeiro mês, não há estoque inicial
-            prob += S[(i, t)] == X[(i, t)] - demandas[(i, t)]
-        else:
-            # Nos meses seguintes, estoque é saldo do mês anterior + produção - demanda
-            prob += S[(i, t)] == S[(i, t - 1)] + X[(i, t)] - demandas[(i, t)]
+    # Variáveis artificiais para atender as demandas dos centros
+    artificiais = pulp.LpVariable.dicts("Artificial", (j for j in range(n_centros)), lowBound=0)
 
-# 2. Capacidade de produção: limite de produção mensal
-for t in range(1, n_meses + 1):
-    prob += pulp.lpSum(X[(i, t)] for i in range(1, n_produtos + 1)) <= capacidade_producao
+    # -----------------------------
+    # Definição da função objetivo
+    # -----------------------------
 
-# 3. Restrições do Big M:
-# Se Y[i,t] = 0, então X[i,t] deve ser 0
-# Se Y[i,t] = 1, então X[i,t] pode ser positivo (até o valor M)
-for i in range(1, n_produtos + 1):
-    for t in range(1, n_meses + 1):
-        prob += X[(i, t)] <= M * Y[(i, t)]
+    # Minimizar custo de transporte + penalidade das variáveis artificiais
+    prob += pulp.lpSum([
+        custos[i * n_centros + j] * X[(i, j)] for i in range(n_fabricas) for j in range(n_centros)
+    ]) + M * pulp.lpSum([artificiais[j] for j in range(n_centros)])
 
-# -----------------------------
-# Resolução do problema
-# -----------------------------
+    # -----------------------------
+    # Definição das restrições
+    # -----------------------------
 
-# Resolver o problema utilizando o solver padrão do PuLP (CBC)
-prob.solve()
+    # 1. Capacidade de produção das fábricas
+    for i in range(n_fabricas):
+        prob += pulp.lpSum([X[(i, j)] for j in range(n_centros)]) <= capacidades_fabricas[i], f"Capacidade_Fabrica_{i+1}"
 
-# -----------------------------
-# Coleta e exibição dos resultados
-# -----------------------------
+    # 2. Atendimento de demanda dos centros (com variável artificial para ajustar)
+    for j in range(n_centros):
+        prob += pulp.lpSum([X[(i, j)] for i in range(n_fabricas)]) + artificiais[j] >= demandas_centros[j], f"Demanda_Centro_{j+1}"
 
-# Tempo total de execução
-end_time = time.time()
-execution_time = end_time - start_time
+    # -----------------------------
+    # Resolução do problema
+    # -----------------------------
 
-# Uso de memória do processo atual
-process = psutil.Process()
-memory_usage = process.memory_info().rss / (1024 ** 2)  # Convertendo para megabytes
+    prob.solve(pulp.PULP_CBC_CMD(msg=False))  # Resolver com CBC
 
-# Status da resolução (Ótimo, Inviável, etc.)
-print(f"Status: {pulp.LpStatus[prob.status]}")
+    # -----------------------------
+    # Medição de tempo e memória
+    # -----------------------------
 
-# Valor ótimo da função objetivo (custo mínimo)
-print(f"Custo Total Ótimo: R$ {pulp.value(prob.objective):.2f}")
+    end_time = time.time()
+    execution_time = end_time - start_time
 
-# Tempo de execução e memória consumida
-print(f"Tempo de Execução: {execution_time:.2f} segundos")
-print(f"Uso de Memória: {memory_usage:.2f} MB")
+    mem_after = process.memory_info().rss / (1024 ** 2)
+    memory_used = mem_after - mem_before
 
-# Exibição dos valores de produção, estoque e decisão de produção
-for i in range(1, n_produtos + 1):
-    for t in range(1, n_meses + 1):
-        print(f"X[{i},{t}] = {X[(i, t)].varValue}")  # Quantidade produzida
-        print(f"S[{i},{t}] = {S[(i, t)].varValue}")  # Estoque final
-        print(f"Y[{i},{t}] = {Y[(i, t)].varValue}")  # Se houve produção (1) ou não (0)
+    # -----------------------------
+    # Impressão dos resultados
+    # -----------------------------
+
+    print("\n### Resultado do Problema de Balanceamento de Produção com Big M ###")
+    print(f"Status: {pulp.LpStatus[prob.status]}")
+    print(f"Custo Total Ótimo: R$ {pulp.value(prob.objective):.2f}")
+    print(f"Tempo de Execução: {execution_time:.2f} segundos")
+    print(f"Uso de Memória: {memory_used:.2f} MB")
+
+    # (Opcional) Mostrar valores das variáveis de decisão
+    for i in range(n_fabricas):
+        for j in range(n_centros):
+            print(f"Fábrica {i+1} -> Centro {j+1}: {X[(i, j)].varValue:.2f}")
+
+# Executar o problema
+problema_balanceamento_producao_big_m()
