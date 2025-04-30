@@ -1,62 +1,104 @@
-# Importação das bibliotecas necessárias
-import pulp  # Biblioteca usada para modelar e resolver problemas de Programação Linear
-import time  # Biblioteca para medir o tempo de execução
-import psutil  # Biblioteca para medir o uso de memória do processo
-import os  # Biblioteca para acessar informações do sistema operacional
+# Importação das bibliotecas
+import numpy as np
+import pulp
+import time
+import psutil
+import os
 
-def solve_big_m_manual():
+def problema_1_melhorado_big_m():
     """
-    Resolve manualmente um problema de Programação Linear
-    utilizando o Método Big M.
-
-    O objetivo é maximizar a função x + 2y, considerando
-    penalidades para variáveis artificiais (a1) usando um grande valor M.
+    Problema 1 (pequena escala) com 10 variáveis e 8 restrições, resolvido com Big M.
+    Adiciona variáveis artificiais para restrições do tipo 'maior ou igual' (≥) e penaliza na função objetivo.
     """
 
-    # Inicia o monitoramento de memória
-    process = psutil.Process(os.getpid())
-    mem_before = process.memory_info().rss / (1024 * 1024)  # Memória antes da execução (em MB)
-
-    # Inicia a contagem do tempo de execução
+    # -----------------------------
+    # Iniciar medições
+    # -----------------------------
     start_time = time.time()
+    process = psutil.Process(os.getpid())
+    mem_before = process.memory_info().rss / (1024 ** 2)  # Em MB
 
-    # Cria o modelo de otimização (problema de maximização)
-    prob = pulp.LpProblem("BigM_Manual", pulp.LpMaximize)
+    # -----------------------------
+    # Geração dos dados do problema (mesmos da versão Revised)
+    # -----------------------------
+    np.random.seed(101)
 
-    # Definição das variáveis de decisão
-    x = pulp.LpVariable("x", lowBound=0)  # Variável x >= 0
-    y = pulp.LpVariable("y", lowBound=0)  # Variável y >= 0
-    a1 = pulp.LpVariable("a1", lowBound=0)  # Variável artificial a1 >= 0 (será penalizada)
+    n_vars = 10
+    n_restricoes = 8
+    M = 10000  # Valor grande para penalizar variáveis artificiais
 
-    # Definição da função objetivo
-    # Queremos maximizar x + 2y, mas penalizando a presença da variável artificial a1
-    M = 1000  # Valor grande de penalização (Big M)
-    prob += x + 2 * y - M * a1, "Função Objetivo com Big M"
+    # Função objetivo (custos)
+    c = np.random.randint(1, 20, size=n_vars)
 
-    # Definição das restrições do problema
-    prob += x + y <= 5, "Restrição_1"             # Restrição normal
-    prob += x - y + a1 == 1, "Restrição_2"         # Restrição com variável artificial
+    # Matriz de coeficientes das restrições
+    A = np.random.randint(-5, 10, size=(n_restricoes, n_vars))
 
-    # Resolve o problema usando o solver padrão do PuLP (CBC)
+    # Lado direito
+    b = np.random.randint(10, 100, size=n_restricoes)
+
+    # Metade das restrições será ≤, metade ≥
+    sentidos = ['<='] * (n_restricoes // 2) + ['>='] * (n_restricoes // 2)
+
+    # -----------------------------
+    # Modelagem com PuLP
+    # -----------------------------
+    prob = pulp.LpProblem("Problema_1_Melhorado_BigM", pulp.LpMinimize)
+
+    # Variáveis de decisão
+    x_vars = [pulp.LpVariable(f"x{i+1}", lowBound=0) for i in range(n_vars)]
+
+    # Lista de variáveis artificiais
+    artificiais = []
+
+    # Função objetivo inicial (custos das variáveis de decisão)
+    objetivo = pulp.lpSum([c[i] * x_vars[i] for i in range(n_vars)])
+
+    # Adiciona as restrições e variáveis artificiais
+    for j in range(n_restricoes):
+        expr = pulp.lpSum([A[j][i] * x_vars[i] for i in range(n_vars)])
+
+        if sentidos[j] == '<=':
+            prob += expr <= b[j], f"Restricao_{j+1}"
+        else:
+                # Para restrições do tipo '>=', adicione:
+            s = pulp.LpVariable(f"s{j+1}", lowBound=0)  # Variável de folga negativa (surplus)
+            a = pulp.LpVariable(f"a{j+1}", lowBound=0)  # Variável artificial
+            prob += expr - s + a == b[j]  # Restrição convertida para igualdade
+            objetivo += M * a  # Penalização da artificial
+
+    # Define função objetivo com penalidade
+    prob += objetivo
+
+    # -----------------------------
+    # Resolução
+    # -----------------------------
     prob.solve(pulp.PULP_CBC_CMD(msg=False))
 
-    # Finaliza a contagem de tempo e memória
+    # -----------------------------
+    # Coleta de desempenho
+    # -----------------------------
     end_time = time.time()
-    mem_after = process.memory_info().rss / (1024 * 1024)  # Memória depois da execução (em MB)
-    memory_used = mem_after - mem_before  # Diferença de memória usada durante a execução
+    mem_after = process.memory_info().rss / (1024 ** 2)
+    memoria_usada = mem_after - mem_before
+    tempo_execucao = end_time - start_time
 
-    # Impressão dos resultados encontrados
-    print(f"\n### Big M (Manual) ###")
-    print(f"Tempo de execução: {end_time - start_time:.6f} s")
-    print(f"Uso de memória: {memory_used:.6f} MB")
-    print(f"Valor ótimo encontrado: {pulp.value(prob.objective):.6f}")
-    print(f"x = {x.value():.3f}, y = {y.value():.3f}, a1 = {a1.value():.3f}")
+    # -----------------------------
+    # Impressão dos resultados
+    # -----------------------------
+    print("\n### Resultado - Problema 1 Melhorado (Big M Manual) ###")
+    print(f"Status: {pulp.LpStatus[prob.status]}")
+    print(f"Valor ótimo: {pulp.value(prob.objective):.2f}")
+    print(f"Tempo de execução: {tempo_execucao:.4f} segundos")
+    print(f"Uso de memória: {memoria_usada:.4f} MB")
 
-    # Verificação importante:
-    # Se a variável artificial a1 tiver valor diferente de zero, 
-    # significa que a solução encontrada pode não ser viável.
-    if a1.value() > 1e-5:
-        print("⚠️ Variável artificial diferente de zero: solução pode ser inviável!")
+    # Valores das variáveis de decisão
+    for i, var in enumerate(x_vars):
+        print(f"{var.name} = {var.varValue:.4f}")
 
-# Executa a função principal
-solve_big_m_manual()
+    # Verificar variáveis artificiais
+    for a in artificiais:
+        if a.varValue > 1e-5:
+            print(f"⚠️ Variável artificial {a.name} > 0 ({a.varValue:.4f}) → Solução pode não ser viável sem Big M.")
+
+# Executar
+problema_1_melhorado_big_m()
