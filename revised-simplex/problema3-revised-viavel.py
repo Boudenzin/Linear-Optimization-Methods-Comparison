@@ -1,62 +1,115 @@
-import pulp
+# Importação das bibliotecas necessárias
+import numpy as np
+from scipy.optimize import linprog
 import time
 import psutil
+import os
 
-# Iniciar a medição do tempo
-start_time = time.time()
+def problema_balanceamento_producao():
+    """
+    Gera e resolve um problema de balanceamento de produção com mais de 100 variáveis e 100 restrições,
+    usando Simplex Revisado
+    
+    O problema é um grande problema de transporte: fábricas abastecendo centros de distribuição.
+    """
 
-# Dados do problema
-n_produtos = 10
-n_meses = 12
-capacidade_producao = 2000
-M = 10000
+    # Iniciar a medição de tempo
+    start_time = time.time()
 
-# Custos de produção, estoque e fixos
-custos_producao = {(i, t): 10 + i + t for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)}
-custos_estoque = {(i, t): 2 + 0.5 * i + 0.1 * t for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)}
-custos_fixos = {i: 50 * i for i in range(1, n_produtos + 1)}
-demandas = {(i, t): 20 + 2 * i + 5 * t for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)}
+    # Iniciar a medição de memória
+    process = psutil.Process(os.getpid())
+    mem_before = process.memory_info().rss / (1024 ** 2)  # Memória em MB
 
-# Criar o problema de minimização
-prob = pulp.LpProblem("Planejamento_Producao_Com_Custos_Fixos", pulp.LpMinimize)
+    # -----------------------------
+    # Definição dos parâmetros do problema
+    # -----------------------------
 
-# Variáveis de decisão
-X = pulp.LpVariable.dicts("Producao", ((i, t) for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)), lowBound=0, cat="Continuous")
-S = pulp.LpVariable.dicts("Estoque", ((i, t) for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)), lowBound=0, cat="Continuous")
-Y = pulp.LpVariable.dicts("Producao_Binaria", ((i, t) for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)), cat="Binary")
+    n_fabricas = 15  # Número de fábricas
+    n_centros = 10   # Número de centros de distribuição
 
-# Função objetivo
-prob += pulp.lpSum([custos_producao[(i, t)] * X[(i, t)] + custos_estoque[(i, t)] * S[(i, t)] + custos_fixos[i] * Y[(i, t)]
-                    for i in range(1, n_produtos + 1) for t in range(1, n_meses + 1)])
+    n_variaveis = n_fabricas * n_centros  # Cada fábrica pode enviar para cada centro
 
-# Restrições de balanço de estoque
-for i in range(1, n_produtos + 1):
-    for t in range(1, n_meses + 1):
-        if t == 1:
-            prob += S[(i, t)] == X[(i, t)] - demandas[(i, t)]
-        else:
-            prob += S[(i, t)] == S[(i, t - 1)] + X[(i, t)] - demandas[(i, t)]
+    # Gerar custos aleatórios de transporte (entre 10 e 100)
+    np.random.seed(42)
+    custos = np.random.randint(10, 100, size=n_variaveis)
 
-# Restrições de capacidade de produção
-for t in range(1, n_meses + 1):
-    prob += pulp.lpSum([X[(i, t)] for i in range(1, n_produtos + 1)]) <= capacidade_producao
+    # Gerar capacidades aleatórias para fábricas (entre 500 e 1500)
+    capacidades_fabricas = np.random.randint(500, 1500, size=n_fabricas)
 
-# Restrições do método Big M
-for i in range(1, n_produtos + 1):
-    for t in range(1, n_meses + 1):
-        prob += X[(i, t)] <= M * Y[(i, t)]
+    # Gerar demandas aleatórias para centros (entre 200 e 800)
+    demandas_centros = np.random.randint(200, 800, size=n_centros)
 
-# Resolver o problema
-prob.solve(pulp.PULP_CBC_CMD(msg=False))  # Usando o solver CBC
+    # -----------------------------
+    # Construção das restrições
+    # -----------------------------
 
-# Medir tempo e memória
-end_time = time.time()
-execution_time = end_time - start_time
-process = psutil.Process()
-memory_usage = process.memory_info().rss / (1024 ** 2)  # Em MB
+    # Restrições de capacidade de fábricas (cada linha limita uma fábrica)
+    A_fabricas = np.zeros((n_fabricas, n_variaveis))
+    for i in range(n_fabricas):
+        for j in range(n_centros):
+            A_fabricas[i, i * n_centros + j] = 1
 
-# Exibir resultados
-print(f"Status: {pulp.LpStatus[prob.status]}")
-print(f"Custo Total Ótimo: R$ {pulp.value(prob.objective):.2f}")
-print(f"Tempo de Execução: {execution_time:.2f} segundos")
-print(f"Uso de Memória: {memory_usage:.2f} MB")
+    # Restrições de atendimento de centros (cada linha garante demanda de um centro)
+    A_centros = np.zeros((n_centros, n_variaveis))
+    for j in range(n_centros):
+        for i in range(n_fabricas):
+            A_centros[j, i * n_centros + j] = 1
+
+    # Lados direitos
+    b_fabricas = capacidades_fabricas
+    b_centros = demandas_centros
+
+    # Junção das restrições: fabricas (≤) + centros (≥ convertidos para ≤ usando sinal)
+    A_ub = np.vstack([
+        A_fabricas,     # Capacidade: soma das saídas <= capacidade
+        -A_centros      # Demanda: -soma das entradas <= -demanda
+    ])
+    b_ub = np.concatenate([
+        b_fabricas,
+        -b_centros
+    ])
+
+    # -----------------------------
+    # Resolução do problema
+    # -----------------------------
+
+    resultado = linprog(
+        custos,
+        A_ub=A_ub,
+        b_ub=b_ub,
+        bounds=[(0, None)] * n_variaveis,  # Quantidade enviada deve ser não negativa
+        method='revised simplex'  # Usar Simplex Revisado puro
+    )
+
+    # -----------------------------
+    # Medição de tempo e memória
+    # -----------------------------
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+
+    mem_after = process.memory_info().rss / (1024 ** 2)  # Memória final em MB
+    memory_used = mem_after - mem_before
+
+    # -----------------------------
+    # Impressão dos resultados
+    # -----------------------------
+
+    print("\n### Resultado do Problema de Balanceamento de Produção ###")
+    if resultado.success:
+        print(f"Status: {resultado.message}")
+        print(f"Custo Total Ótimo: R$ {resultado.fun:.2f}")
+    else:
+        print("❌ Solução não encontrada.")
+
+    print(f"Tempo de Execução: {execution_time:.2f} segundos")
+    print(f"Uso de Memória: {memory_used:.2f} MB")
+
+    # (Opcional) Exibir quantidade enviada de cada fábrica para cada centro
+    for i in range(n_fabricas):
+        for j in range(n_centros):
+            idx = i * n_centros + j
+            print(f"Fábrica {i+1} -> Centro {j+1}: {resultado.x[idx]:.2f}")
+
+# Executar o problema
+problema_balanceamento_producao()
