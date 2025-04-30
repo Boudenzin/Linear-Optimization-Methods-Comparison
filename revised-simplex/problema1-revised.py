@@ -1,131 +1,91 @@
-# Importação das bibliotecas necessárias
-import numpy as np  # Biblioteca para operações matriciais
-import time  # Biblioteca para medir o tempo de execução
-import psutil  # Biblioteca para medir o uso de memória do processo
-import os  # Biblioteca para acessar informações do sistema operacional
+# Importação das bibliotecas
+import numpy as np
+import time
+import psutil
+from scipy.optimize import linprog
 
-def simplex_revisado_puro(c, A, b):
+def problema_1_melhorado():
     """
-    Implementação do Método Simplex Revisado puro, sem Big M.
-    
-    Resolve problemas de Programação Linear com todas as restrições no formato ≤.
-    
-    Parâmetros:
-    - c: vetor de custos da função objetivo (a maximizar).
-    - A: matriz de coeficientes das restrições (no formato ≤).
-    - b: vetor do lado direito das restrições.
-
-    Retorna:
-    - vetor solução x (variáveis originais).
+    Problema 1 (pequena escala) com 10 variáveis e 8 restrições.
+    Objetivo: Minimizar custos com restrições de capacidade e limites técnicos.
+    Compatível com Simplex Revisado e Big M.
     """
 
-    n = len(c)  # Número de variáveis originais
-    m = len(b)  # Número de restrições
-
-    # Ajusta o problema para maximização: cria matriz extendida com variáveis de folga
-    A_ext = np.hstack([A, np.identity(m)])  # Adiciona uma variável de folga para cada restrição
-
-    # Ajusta o vetor de custos (custos das variáveis de folga são zero)
-    c_ext = np.array(c + [0] * m, dtype=float)
-
-    # Definimos a base inicial: as variáveis de folga
-    base = list(range(n, n + m))  # índices das variáveis de folga
-    non_base = list(range(n))     # índices das variáveis originais
-
-    # Matrizes iniciais
-    B = A_ext[:, base]  # Colunas correspondentes às variáveis básicas
-    N = A_ext[:, non_base]  # Colunas correspondentes às variáveis não básicas
-    B_inv = np.linalg.inv(B)  # Inversa da matriz básica
+    # -----------------------------
+    # Iniciar medições
+    # -----------------------------
+    start_time = time.time()
+    process = psutil.Process()
+    mem_before = process.memory_info().rss / (1024 ** 2)  # Memória inicial em MB
 
     # -----------------------------
-    # Início do algoritmo iterativo do Simplex Revisado
+    # Gerar dados do problema
     # -----------------------------
+    np.random.seed(101)  # Semente fixa
 
-    while True:
-        # Solução básica atual
-        x_B = B_inv @ b
+    n_vars = 10
+    n_restricoes = 8
 
-        # Custos das variáveis básicas e não básicas
-        c_B = c_ext[base]
-        c_N = c_ext[non_base]
+    # Coeficientes da função objetivo (custos aleatórios de 1 a 20)
+    c = np.random.randint(1, 20, size=n_vars)
 
-        # Multiplicadores simplex
-        lambda_ = c_B @ B_inv
+    # Matriz A de restrições (valores entre -5 e 10)
+    A = np.random.randint(-5, 10, size=(n_restricoes, n_vars))
 
-        # Custos reduzidos
-        r_N = c_N - lambda_ @ N
+    # Lado direito b das restrições (entre 10 e 100)
+    b = np.random.randint(10, 100, size=n_restricoes)
 
-        # Critério de parada: se todos os custos reduzidos forem <= 0, encontramos a solução ótima
-        if np.all(r_N <= 0):
-            break
+    # Sinais das restrições: metade ≤, metade ≥
+    sentidos = ['<='] * (n_restricoes // 2) + ['>='] * (n_restricoes // 2)
 
-        # Variável de entrada: aquela com maior custo reduzido positivo
-        entering_idx = np.argmax(r_N)
-        entering = non_base[entering_idx]
+    # Separar as restrições em A_ub e A_eq de acordo com o tipo
+    A_ub, b_ub = [], []
+    for i in range(n_restricoes):
+        if sentidos[i] == '<=':
+            A_ub.append(A[i])
+            b_ub.append(b[i])
+        else:
+            A_ub.append(-A[i])  # Multiplica por -1 para virar ≤
+            b_ub.append(-b[i])
 
-        # Direção de movimento no espaço das variáveis básicas
-        d_B = B_inv @ A_ext[:, entering]
+    A_ub = np.array(A_ub)
+    b_ub = np.array(b_ub)
 
-        # Teste de ilimitabilidade
-        if np.all(d_B <= 0):
-            raise Exception("Problema ilimitado.")
+    # -----------------------------
+    # Resolver com Simplex Revisado
+    # -----------------------------
+    resultado = linprog(
+        c,
+        A_ub=A_ub,
+        b_ub=b_ub,
+        bounds=[(0, None)] * n_vars,
+        method='revised simplex'
+    )
 
-        # Regra do mínimo quociente
-        ratios = np.array([x_B[i] / d_B[i] if d_B[i] > 0 else np.inf for i in range(len(d_B))])
-        leaving_idx = np.argmin(ratios)
-        leaving = base[leaving_idx]
+    # -----------------------------
+    # Coleta de desempenho
+    # -----------------------------
+    end_time = time.time()
+    mem_after = process.memory_info().rss / (1024 ** 2)
+    memoria_usada = mem_after - mem_before
+    tempo_execucao = end_time - start_time
 
-        # Atualiza base e não-base
-        base[leaving_idx] = entering
-        non_base[entering_idx] = leaving
+    # -----------------------------
+    # Resultados
+    # -----------------------------
+    print("\n### Resultado - Problema 1 Melhorado (Simplex Revisado) ###")
+    if resultado.success:
+        print(f"Status: {resultado.message}")
+        print(f"Valor ótimo: {resultado.fun:.2f}")
+    else:
+        print("❌ Não foi possível encontrar solução viável.")
 
-        # Atualiza as matrizes B, B_inv e N
-        B = A_ext[:, base]
-        B_inv = np.linalg.inv(B)
-        N = A_ext[:, non_base]
+    print(f"Tempo de execução: {tempo_execucao:.4f} segundos")
+    print(f"Uso de memória: {memoria_usada:.4f} MB")
 
-    # Reconstrói o vetor solução completo
-    x = np.zeros(n + m)
-    x[base] = x_B
+    # Exibir valores das variáveis
+    for i, x in enumerate(resultado.x):
+        print(f"x{i+1} = {x:.4f}")
 
-    # Retorna apenas as variáveis originais
-    return x[:n]
-
-# -----------------------------
-# Execução prática e coleta de dados
-# -----------------------------
-
-# Medir memória antes de resolver
-process = psutil.Process(os.getpid())
-mem_before = process.memory_info().rss / (1024 * 1024)  # Memória antes (em MB)
-
-# Medir tempo de execução
-start_time = time.perf_counter()
-
-# Definição dos dados do problema
-c = [1, 2]  # Função objetivo: Maximizar x + 2y
-A = [
-    [1, 1],    # x + y <= 5
-    [-1, 1]    # -x + y <= -1  (transformação da desigualdade ≥ para ≤)
-]
-b = [5, -1]  # Lados direitos das restrições
-
-# Resolver o problema
-solucao = simplex_revisado_puro(c, A, b)
-
-# Medir tempo e memória após resolver
-end_time = time.perf_counter()
-mem_after = process.memory_info().rss / (1024 * 1024)  # Memória depois (em MB)
-
-# -----------------------------
-# Impressão dos resultados
-# -----------------------------
-
-# Mostra a solução ótima encontrada
-print(f"Solução ótima: x = {solucao[0]:.3f}, y = {solucao[1]:.3f}")
-
-# Mostra o tempo de execução
-print(f"Tempo de execução: {end_time - start_time:.6f} segundos")
-
-# Mostra o uso de memória
-print(f"Uso de memória: {mem_after - mem_before:.6f} MB")
+# Executar
+problema_1_melhorado()
