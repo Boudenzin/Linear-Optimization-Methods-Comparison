@@ -60,7 +60,7 @@ def problema_1_melhorado_big_m():
         if sentidos[j] == '<=':
             prob += expr <= b[j], f"Restricao_{j+1}"
         else:
-                # Para restrições do tipo '>=', adicione:
+            # Para restrições do tipo '>=', adicione:
             s = pulp.LpVariable(f"s{j+1}", lowBound=0)  # Variável de folga negativa (surplus)
             a = pulp.LpVariable(f"a{j+1}", lowBound=0)  # Variável artificial
             prob += expr - s + a == b[j]  # Restrição convertida para igualdade
