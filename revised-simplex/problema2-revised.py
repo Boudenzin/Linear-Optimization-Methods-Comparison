@@ -1,86 +1,95 @@
-# Importação das bibliotecas necessárias
-import numpy as np  # Biblioteca para operações numéricas (não usada diretamente aqui, mas importada)
-from scipy.optimize import linprog  # Função para resolver problemas de Programação Linear
-import time  # Biblioteca para medir o tempo de execução
-import psutil  # Biblioteca para medir o uso de memória do processo
-import os  # Biblioteca para acessar informações do sistema operacional
+import numpy as np
+import time
+import psutil
+from scipy.optimize import linprog
 
-def solve_transportation_problem():
+def problema_2_robusto():
     """
-    Resolve um problema clássico de transporte usando o método Simplex Revisado (HiGHS).
-    
-    Minimiza o custo total de transporte, respeitando as capacidades de produção das fábricas
-    e as demandas dos centros de distribuição.
+    Problema 2 (média escala): alocação de recursos entre 60 projetos.
+    Contém 60 variáveis, 40 restrições (mistura de ≤ e ≥), com viabilidade garantida.
+    Resolve com Simplex Revisado puro.
     """
 
-    # Medição de memória antes da execução
-    process = psutil.Process(os.getpid())
-    mem_before = process.memory_info().rss / (1024 * 1024)  # Memória em MB
-
-    # Início da medição do tempo de execução
-    start_time = time.perf_counter()
+    # Iniciar medições
+    start_time = time.time()
+    process = psutil.Process()
+    mem_before = process.memory_info().rss / (1024 ** 2)  # Memória inicial (MB)
 
     # -----------------------------
-    # Definição dos dados do problema
+    # Parâmetros do problema
     # -----------------------------
+    np.random.seed(202)  # Seed fixa para reprodutibilidade
 
-    # Vetor de custos de transporte (custo unitário de enviar produtos)
-    c = [5, 3, 6, 2, 7, 4, 6, 3, 5, 8, 7, 4, 2, 6, 3]
+    n_variaveis = 60   # Número de projetos (variáveis)
+    n_restricoes = 40  # Número de restrições (equilibrada para escala média)
 
-    # Matriz de coeficientes das restrições (A_eq)
-    # Cada linha representa uma capacidade ou uma demanda
-    A_eq = [
-        [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # Capacidade Fábrica 1
-        [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  # Capacidade Fábrica 2
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],  # Capacidade Fábrica 3
-        [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0],  # Demanda Centro 1
-        [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],  # Demanda Centro 2
-        [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],  # Demanda Centro 3
-        [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],  # Demanda Centro 4
-        [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]   # Demanda Centro 5
-    ]
+    # Custos aleatórios entre 5 e 30 para cada projeto
+    custos = np.random.randint(5, 30, size=n_variaveis)
 
-    # Lados direitos das restrições (b_eq)
-    b_eq = [110, 150, 200, 80, 90, 120, 70, 100]
+    # Matriz de restrições A: entre -3 e 8
+    A = np.random.randint(-3, 8, size=(n_restricoes, n_variaveis))
 
-    # Limites das variáveis (quantidades não podem ser negativas)
-    bounds = [(0, None)] * 15
+    # Lado direito (b): entre 100 e 500
+    b = np.random.randint(100, 500, size=n_restricoes)
+
+    # Metade das restrições será ≤, metade será ≥ (Big M necessário)
+    sinais = ['<='] * (n_restricoes // 2) + ['>='] * (n_restricoes // 2)
 
     # -----------------------------
-    # Resolução do problema
+    # Preparar restrições para linprog
     # -----------------------------
+    A_ub = []
+    b_ub = []
 
-    # Resolver usando o método 'highs' da SciPy, com estratégia 2 (Simplex Dual)
-    result = linprog(
-        c,
-        A_eq=A_eq,
-        b_eq=b_eq,
-        bounds=bounds,
-        method='highs',
-        options={"simplex_strategy": 2}  # 2 = simplex dual (focado em estabilidade e eficiência)
+    for i in range(n_restricoes):
+        if sinais[i] == '<=':
+            A_ub.append(A[i])
+            b_ub.append(b[i])
+        else:
+            # Multiplica por -1 para converter para ≤
+            A_ub.append(-A[i])
+            b_ub.append(-b[i])
+
+    A_ub = np.array(A_ub)
+    b_ub = np.array(b_ub)
+
+    # -----------------------------
+    # Resolver com Simplex Revisado
+    # -----------------------------
+    resultado = linprog(
+        c=custos,
+        A_ub=A_ub,
+        b_ub=b_ub,
+        bounds=[(0, None)] * n_variaveis,
+        method='revised simplex'
     )
 
     # -----------------------------
-    # Medição de tempo e memória depois da execução
+    # Medições finais
     # -----------------------------
-
-    end_time = time.perf_counter()
-    mem_after = process.memory_info().rss / (1024 * 1024)
-    memory_used = mem_after - mem_before
+    end_time = time.time()
+    mem_after = process.memory_info().rss / (1024 ** 2)
+    tempo = end_time - start_time
+    memoria = mem_after - mem_before
 
     # -----------------------------
-    # Impressão dos resultados
+    # Exibir resultados
     # -----------------------------
+    print("\n### Resultado - Problema 2 (Robusto, Revisado) ###")
+    if resultado.success:
+        print(f"Status: {resultado.message}")
+        print(f"Valor ótimo: {resultado.fun:.2f}")
+    else:
+        print("❌ Não foi possível encontrar uma solução.")
 
-    print("\n### Resultado do Problema de Transporte (Simplex Revisado) ###")
-    print(f"Tempo de execução: {end_time - start_time:.6f} s")
-    print(f"Uso de memória: {memory_used:.2f} MB")
-    print(f"Status: {result.message}")
-    print(f"Valor ótimo encontrado: {result.fun:.6f}")
+    print(f"Tempo de execução: {tempo:.4f} segundos")
+    print(f"Uso de memória: {memoria:.4f} MB")
 
-    # Exibição dos valores das variáveis de decisão (quantidades enviadas)
-    for i, value in enumerate(result.x):
-        print(f"X{i//5 + 1}{i%5 + 1} = {value:.3f}")
+    # Valores das variáveis (parciais)
+    for i, val in enumerate(resultado.x[:10]):
+        print(f"x{i+1} = {val:.4f}")
+    if n_variaveis > 10:
+        print(f"... (exibindo apenas os 10 primeiros de {n_variaveis} projetos)")
 
-# Executar a função
-solve_transportation_problem()
+# Executar
+problema_2_robusto()
