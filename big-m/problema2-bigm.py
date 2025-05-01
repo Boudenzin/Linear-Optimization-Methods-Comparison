@@ -1,85 +1,99 @@
-# Importação das bibliotecas necessárias
-import pulp  # Biblioteca usada para modelar e resolver problemas de Programação Linear
-import time  # Biblioteca para medir o tempo de execução
-import psutil  # Biblioteca para medir o uso de memória do processo
-import os  # Biblioteca para acessar informações do sistema operacional
+import numpy as np
+import pulp
+import time
+import psutil
+import os
 
-def solve_transportation_problem():
+def problema_2_robusto_big_m():
     """
-    Resolve um problema clássico de transporte usando Programação Linear.
-    
-    O objetivo é minimizar o custo total de transporte entre fábricas e centros de distribuição,
-    respeitando as capacidades de produção e as demandas dos centros.
+    Problema 2 (média escala) com 60 variáveis e 40 restrições, resolvido com Big M.
+    Adiciona variáveis artificiais nas restrições do tipo 'maior ou igual' e penaliza na função objetivo.
     """
 
-    # Inicia o monitoramento de memória do processo
-    process = psutil.Process(os.getpid())
-    mem_before = process.memory_info().rss / (1024 * 1024)  # Memória antes da execução (em MB)
-
-    # Inicia a contagem do tempo de execução
+    # -----------------------------
+    # Início da medição
+    # -----------------------------
     start_time = time.time()
+    process = psutil.Process(os.getpid())
+    mem_before = process.memory_info().rss / (1024 ** 2)  # Em MB
 
-    # Cria o modelo de otimização (problema de minimização)
-    prob = pulp.LpProblem("Problema_Transporte", pulp.LpMinimize)
+    # -----------------------------
+    # Geração de dados consistentes
+    # -----------------------------
+    np.random.seed(202)
 
-    # Definição das variáveis de decisão
-    # Cada variável representa a quantidade transportada da fábrica i para o centro j
-    X11 = pulp.LpVariable("X11", lowBound=0)
-    X12 = pulp.LpVariable("X12", lowBound=0)
-    X13 = pulp.LpVariable("X13", lowBound=0)
-    X14 = pulp.LpVariable("X14", lowBound=0)
-    X15 = pulp.LpVariable("X15", lowBound=0)
-    X21 = pulp.LpVariable("X21", lowBound=0)
-    X22 = pulp.LpVariable("X22", lowBound=0)
-    X23 = pulp.LpVariable("X23", lowBound=0)
-    X24 = pulp.LpVariable("X24", lowBound=0)
-    X25 = pulp.LpVariable("X25", lowBound=0)
-    X31 = pulp.LpVariable("X31", lowBound=0)
-    X32 = pulp.LpVariable("X32", lowBound=0)
-    X33 = pulp.LpVariable("X33", lowBound=0)
-    X34 = pulp.LpVariable("X34", lowBound=0)
-    X35 = pulp.LpVariable("X35", lowBound=0)
+    n_vars = 60
+    n_restricoes = 40
+    M = 10000  # Penalidade para variáveis artificiais
 
-    # Definição da função objetivo
-    # Cada termo representa o custo unitário multiplicado pela quantidade transportada
-    prob += (
-        5*X11 + 3*X12 + 6*X13 + 2*X14 + 7*X15 +
-        4*X21 + 6*X22 + 3*X23 + 5*X24 + 8*X25 +
-        7*X31 + 4*X32 + 2*X33 + 6*X34 + 3*X35
-    ), "Custo Total"
+    custos = np.random.randint(5, 30, size=n_vars)
+    A = np.random.randint(-3, 8, size=(n_restricoes, n_vars))
+    b = np.random.randint(100, 500, size=n_restricoes)
 
-    # Definição das restrições de capacidade das fábricas
-    prob += X11 + X12 + X13 + X14 + X15 <= 110, "Capacidade_Fábrica_1"
-    prob += X21 + X22 + X23 + X24 + X25 <= 150, "Capacidade_Fábrica_2"
-    prob += X31 + X32 + X33 + X34 + X35 <= 200, "Capacidade_Fábrica_3"
+    sinais = ['<='] * (n_restricoes // 2) + ['>='] * (n_restricoes // 2)
 
-    # Definição das restrições de demanda dos centros de distribuição
-    prob += X11 + X21 + X31 >= 80, "Demanda_Centro_1"
-    prob += X12 + X22 + X32 >= 90, "Demanda_Centro_2"
-    prob += X13 + X23 + X33 >= 120, "Demanda_Centro_3"
-    prob += X14 + X24 + X34 >= 70, "Demanda_Centro_4"
-    prob += X15 + X25 + X35 >= 100, "Demanda_Centro_5"
+    # -----------------------------
+    # Modelagem com PuLP
+    # -----------------------------
+    prob = pulp.LpProblem("Problema_2_Robusto_BigM", pulp.LpMinimize)
 
-    # Resolver o problema usando o solver CBC
+    # Variáveis de decisão (x1 a x60)
+    x = [pulp.LpVariable(f"x{i+1}", lowBound=0) for i in range(n_vars)]
+
+    # Variáveis artificiais (só nas restrições do tipo ≥)
+    artificiais = []
+
+    # Função objetivo inicial
+    objetivo = pulp.lpSum([custos[i] * x[i] for i in range(n_vars)])
+
+    # Adição de restrições e construção da função objetivo com Big M
+    for i in range(n_restricoes):
+        expr = pulp.lpSum([A[i][j] * x[j] for j in range(n_vars)])
+
+        if sinais[i] == '<=':
+            prob += expr <= b[i], f"Restricao_{i+1}"
+        else:
+            s = pulp.LpVariable(f"s{i+1}", lowBound=0)  # Surplus
+            a = pulp.LpVariable(f"a{i+1}", lowBound=0)  # Artificial
+            artificiais.append(a)
+            prob += expr - s + a == b[i], f"Restricao_{i+1}"
+            objetivo += M * a
+
+    # Define função objetivo com penalidades
+    prob += objetivo
+
+    # -----------------------------
+    # Resolução com CBC
+    # -----------------------------
     prob.solve(pulp.PULP_CBC_CMD(msg=False))
 
-    # Finaliza a contagem de tempo e memória
+    # -----------------------------
+    # Medição final
+    # -----------------------------
     end_time = time.time()
-    mem_after = process.memory_info().rss / (1024 * 1024)  # Memória depois da execução (em MB)
-    memory_used = mem_after - mem_before  # Diferença de memória usada
+    mem_after = process.memory_info().rss / (1024 ** 2)
+    tempo = end_time - start_time
+    memoria = mem_after - mem_before
 
-    # Captura o valor ótimo da função objetivo (custo mínimo)
-    optimal_value = pulp.value(prob.objective)
-
+    # -----------------------------
     # Impressão dos resultados
-    print(f"\n### Resultado do Problema de Transporte ###")
-    print(f"Tempo de execução: {end_time - start_time:.6f} s")
-    print(f"Uso de memória: {memory_used:.2f} MB")
-    print(f"Valor ótimo encontrado: {optimal_value:.6f}")
+    # -----------------------------
+    print("\n### Resultado - Problema 2 Robusto (Big M Manual) ###")
+    print(f"Status: {pulp.LpStatus[prob.status]}")
+    print(f"Valor ótimo: {pulp.value(prob.objective):.2f}")
+    print(f"Tempo de execução: {tempo:.4f} segundos")
+    print(f"Uso de memória: {memoria:.4f} MB")
 
-    # Exibe os valores das variáveis de decisão
-    for v in prob.variables():
-        print(f"{v.name} = {v.varValue:.3f}")
+    # Mostrar primeiras variáveis
+    for var in x[:10]:
+        print(f"{var.name} = {var.varValue:.4f}")
+    if len(x) > 10:
+        print(f"... (exibindo apenas os 10 primeiros de {len(x)} variáveis)")
 
-# Executa a função principal
-solve_transportation_problem()
+    # Checagem das artificiais
+    for a in artificiais:
+        if a.varValue > 1e-5:
+            print(f"⚠️ Variável artificial {a.name} = {a.varValue:.4f} → Solução pode não ser viável sem Big M.")
+
+# Executar
+problema_2_robusto_big_m()
