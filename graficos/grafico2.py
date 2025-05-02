@@ -1,10 +1,19 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Dados
-testes = ['Teste 1', 'Teste 2', 'Teste 3 (Inv.)', 'Teste 3 (Viável)']
-uso_memoria_revised = [0.25, 1.78, 6.93, 31.85]
-uso_memoria_big_m = [0.59, 0.59, 32.03, 31.91]
+modo_sbc = False  # Altere para False para versão colorida
+
+if modo_sbc:
+    cor_revised = 'gray'
+    cor_bigm = 'black'
+else:
+    cor_revised = '#1f77b4'
+    cor_bigm = '#ff7f0e'
+
+# Dados reais (uso de memória em MB)
+testes = ['Teste 1', 'Teste 2', 'Teste 3']
+uso_memoria_revised = [0.85, 1.14, 1.02]
+uso_memoria_big_m = [3.29, 4.72, 4.13]
 
 # Largura das barras
 bar_width = 0.35
@@ -12,8 +21,8 @@ index = np.arange(len(testes))
 
 # Criar a figura
 plt.figure(figsize=(10, 6))
-bars1 = plt.bar(index, uso_memoria_revised, bar_width, label='Simplex Revisado', color='gray')
-bars2 = plt.bar(index + bar_width, uso_memoria_big_m, bar_width, label='Big M', color='black')
+bars1 = plt.bar(index, uso_memoria_revised, bar_width, label='Simplex Revisado', color=cor_revised)
+bars2 = plt.bar(index + bar_width, uso_memoria_big_m, bar_width, label='Big M', color=cor_bigm)
 
 # Adicionar valores acima das barras
 for bar in bars1:
@@ -27,12 +36,12 @@ for bar in bars2:
 # Configurações do gráfico
 plt.xlabel('Testes')
 plt.ylabel('Uso de Memória (MB)')
-plt.title('Comparação do Uso de Memória entre Métodos')
+plt.title('Figura 2 — Comparação do Uso de Memória entre Métodos')
 plt.xticks(index + bar_width / 2, testes)
 plt.legend()
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 
 # Salvar figura
 plt.tight_layout()
-plt.savefig('uso_memoria_comparacao.png', dpi=300)
+plt.savefig('figura2_uso_memoria.png', dpi=300)
 plt.show()
