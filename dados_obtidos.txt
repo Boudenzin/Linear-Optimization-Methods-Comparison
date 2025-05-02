@@ -1,51 +1,377 @@
+### Resultado - Problema 1 Melhorado (Simplex Revisado) ###
+Status: Optimization terminated successfully.
+Valor ótimo: 85.29
+Tempo de execução: 0.0263 segundos
+Uso de memória: 0.8477 MB
+x1 = 1.8571
+x2 = 0.0000
+x3 = 0.0000
+x4 = 0.0000
+x5 = 0.0000
+x6 = 0.0000
+x7 = 0.0000
+x8 = 7.0000
+x9 = 0.0000
+x10 = 0.0000
 
-REVISED 1
-Solução ótima: x = 3.000, y = 2.000
-Tempo de execução: 0.001317 segundos
-Uso de memória: 0.250000 MB
+### Resultado - Problema 1 Melhorado (Big M Manual) ###
+Status: Optimal   
+Valor ótimo: 85.29
+Tempo de execução: 1.1374 segundos
+Uso de memória: 3.2891 MB
+x1 = 1.8571
+x2 = 0.0000
+x3 = 0.0000
+x4 = 0.0000
+x5 = 0.0000
+x6 = 0.0000
+x7 = 0.0000
+x8 = 7.0000
+x9 = 0.0000
+x10 = 0.0000
 
-BIG M 1
+### Resultado - Problema 2 (Robusto, Revisado) ###
+Status: Optimization terminated successfully.
+Valor ótimo: 1568.74
+Tempo de execução: 0.0721 segundos
+Uso de memória: 1.1406 MB
+x1 = 3.1346
+x2 = 0.0000
+x3 = 0.0000
+x4 = 3.8714
+x5 = 0.0000
+x6 = 0.0000
+x7 = 17.6243
+x8 = 0.0000
+x9 = 0.0000
+x10 = 0.0000
+... (exibindo apenas os 10 primeiros de 60 variáveis)
 
-Tempo de execução: 0.125915 s
-Uso de memória: 0.589844 MB
-Valor ótimo encontrado: 7.000000
-x = 3.000, y = 2.000, a1 = 0.000
-
-REVISED 2
-
-Tempo de execução: 0.030453 s
-Uso de memória: 1.78 MB
-Status: Optimization terminated successfully. (HiGHS Status 7: Optimal)
-Valor ótimo encontrado: 1390.000000
-
-BIG M 2
-
-Tempo de execução: 0.058910 s
-Uso de memória: 0.59 MB
-Valor ótimo encontrado: 1390.000000
-
-BIG M 3 INVIAVEL
-
-Status: Infeasible
-Tempo de Execução: 0.12 segundos
-Uso de Memória: 32.03 MB
-
-REVISED 3 INVIAVEL
-
-A solução não foi encontrada.
-Tempo de Execução: 1.14 segundos
-Uso de Memória: 6.93 MB
-
-BIG 3 VIAVEL
-
-Custo Total Ótimo: R$ 207866.00
-Tempo de Execução: 0.95 segundos
-Uso de Memória: 31.91 MB
-
-
-REVISED 3 VIAVEL
-
+### Resultado - Problema 2 Robusto (Big M Manual) ###
 Status: Optimal
-Custo Total Ótimo: R$ 207866.00
-Tempo de Execução: 0.43 segundos
-Uso de Memória: 31.85 MB
+Valor ótimo: 1568.74
+Tempo de execução: 0.2714 segundos
+Uso de memória: 4.7227 MB
+x1 = 3.1346
+x2 = 0.0000
+x3 = 0.0000
+x4 = 3.8714
+x5 = 0.0000
+x6 = 0.0000
+x7 = 17.6243
+x8 = 0.0000
+x9 = 0.0000
+x10 = 0.0000
+... (exibindo apenas os 10 primeiros de 60 variáveis)
+
+### Resultado do Problema de Balanceamento de Produção com Big M ###
+Status: Optimal
+Custo Total Ótimo: R$ 83180.00
+Tempo de Execução: 0.22 segundos
+Uso de Memória: 4.13 MB
+Fábrica 1 -> Centro 1: 0.00
+Fábrica 1 -> Centro 2: 0.00
+Fábrica 1 -> Centro 3: 0.00
+Fábrica 1 -> Centro 4: 0.00
+Fábrica 1 -> Centro 5: 0.00
+Fábrica 1 -> Centro 6: 0.00
+Fábrica 1 -> Centro 7: 0.00
+Fábrica 1 -> Centro 8: 0.00
+Fábrica 1 -> Centro 9: 0.00
+Fábrica 1 -> Centro 10: 0.00
+Fábrica 2 -> Centro 1: 0.00
+Fábrica 2 -> Centro 2: 437.00
+Fábrica 2 -> Centro 3: 0.00
+Fábrica 2 -> Centro 4: 0.00
+Fábrica 2 -> Centro 5: 0.00
+Fábrica 2 -> Centro 6: 0.00
+Fábrica 2 -> Centro 7: 0.00
+Fábrica 2 -> Centro 8: 0.00
+Fábrica 2 -> Centro 9: 547.00
+Fábrica 2 -> Centro 10: 0.00
+Fábrica 3 -> Centro 1: 0.00
+Fábrica 3 -> Centro 2: 0.00
+Fábrica 3 -> Centro 3: 0.00
+Fábrica 3 -> Centro 4: 0.00
+Fábrica 3 -> Centro 5: 0.00
+Fábrica 3 -> Centro 6: 0.00
+Fábrica 3 -> Centro 7: 0.00
+Fábrica 3 -> Centro 8: 0.00
+Fábrica 3 -> Centro 9: 0.00
+Fábrica 3 -> Centro 10: 0.00
+Fábrica 4 -> Centro 1: 0.00
+Fábrica 4 -> Centro 2: 0.00
+Fábrica 4 -> Centro 3: 0.00
+Fábrica 4 -> Centro 4: 0.00
+Fábrica 4 -> Centro 5: 0.00
+Fábrica 4 -> Centro 6: 0.00
+Fábrica 4 -> Centro 7: 0.00
+Fábrica 4 -> Centro 8: 0.00
+Fábrica 4 -> Centro 9: 0.00
+Fábrica 4 -> Centro 10: 0.00
+Fábrica 5 -> Centro 1: 113.00
+Fábrica 5 -> Centro 2: 0.00
+Fábrica 5 -> Centro 3: 773.00
+Fábrica 5 -> Centro 4: 0.00
+Fábrica 5 -> Centro 5: 0.00
+Fábrica 5 -> Centro 6: 0.00
+Fábrica 5 -> Centro 7: 0.00
+Fábrica 5 -> Centro 8: 362.00
+Fábrica 5 -> Centro 9: 0.00
+Fábrica 5 -> Centro 10: 0.00
+Fábrica 6 -> Centro 1: 0.00
+Fábrica 6 -> Centro 2: 319.00
+Fábrica 6 -> Centro 3: 0.00
+Fábrica 6 -> Centro 4: 0.00
+Fábrica 6 -> Centro 5: 96.00
+Fábrica 6 -> Centro 6: 0.00
+Fábrica 6 -> Centro 7: 0.00
+Fábrica 6 -> Centro 8: 0.00
+Fábrica 6 -> Centro 9: 0.00
+Fábrica 6 -> Centro 10: 87.00
+Fábrica 7 -> Centro 1: 0.00
+Fábrica 7 -> Centro 2: 0.00
+Fábrica 7 -> Centro 3: 0.00
+Fábrica 7 -> Centro 4: 0.00
+Fábrica 7 -> Centro 5: 0.00
+Fábrica 7 -> Centro 6: 0.00
+Fábrica 7 -> Centro 7: 327.00
+Fábrica 7 -> Centro 8: 343.00
+Fábrica 7 -> Centro 9: 0.00
+Fábrica 7 -> Centro 10: 0.00
+Fábrica 8 -> Centro 1: 664.00
+Fábrica 8 -> Centro 2: 0.00
+Fábrica 8 -> Centro 3: 0.00
+Fábrica 8 -> Centro 4: 227.00
+Fábrica 8 -> Centro 5: 0.00
+Fábrica 8 -> Centro 6: 0.00
+Fábrica 8 -> Centro 7: 0.00
+Fábrica 8 -> Centro 8: 0.00
+Fábrica 8 -> Centro 9: 0.00
+Fábrica 8 -> Centro 10: 0.00
+Fábrica 9 -> Centro 1: 0.00
+Fábrica 9 -> Centro 2: 0.00
+Fábrica 9 -> Centro 3: 0.00
+Fábrica 9 -> Centro 4: 0.00
+Fábrica 9 -> Centro 5: 0.00
+Fábrica 9 -> Centro 6: 0.00
+Fábrica 9 -> Centro 7: 0.00
+Fábrica 9 -> Centro 8: 0.00
+Fábrica 9 -> Centro 9: 0.00
+Fábrica 9 -> Centro 10: 0.00
+Fábrica 10 -> Centro 1: 0.00
+Fábrica 10 -> Centro 2: 0.00
+Fábrica 10 -> Centro 3: 0.00
+Fábrica 10 -> Centro 4: 0.00
+Fábrica 10 -> Centro 5: 0.00
+Fábrica 10 -> Centro 6: 0.00
+Fábrica 10 -> Centro 7: 0.00
+Fábrica 10 -> Centro 8: 0.00
+Fábrica 10 -> Centro 9: 0.00
+Fábrica 10 -> Centro 10: 0.00
+Fábrica 11 -> Centro 1: 0.00
+Fábrica 11 -> Centro 2: 0.00
+Fábrica 11 -> Centro 3: 0.00
+Fábrica 11 -> Centro 4: 0.00
+Fábrica 11 -> Centro 5: 659.00
+Fábrica 11 -> Centro 6: 0.00
+Fábrica 11 -> Centro 7: 0.00
+Fábrica 11 -> Centro 8: 0.00
+Fábrica 11 -> Centro 9: 0.00
+Fábrica 11 -> Centro 10: 0.00
+Fábrica 12 -> Centro 1: 0.00
+Fábrica 12 -> Centro 2: 0.00
+Fábrica 12 -> Centro 3: 0.00
+Fábrica 12 -> Centro 4: 0.00
+Fábrica 12 -> Centro 5: 0.00
+Fábrica 12 -> Centro 6: 0.00
+Fábrica 12 -> Centro 7: 0.00
+Fábrica 12 -> Centro 8: 0.00
+Fábrica 12 -> Centro 9: 0.00
+Fábrica 12 -> Centro 10: 0.00
+Fábrica 13 -> Centro 1: 0.00
+Fábrica 13 -> Centro 2: 0.00
+Fábrica 13 -> Centro 3: 0.00
+Fábrica 13 -> Centro 4: 0.00
+Fábrica 13 -> Centro 5: 0.00
+Fábrica 13 -> Centro 6: 0.00
+Fábrica 13 -> Centro 7: 0.00
+Fábrica 13 -> Centro 8: 0.00
+Fábrica 13 -> Centro 9: 0.00
+Fábrica 13 -> Centro 10: 0.00
+Fábrica 14 -> Centro 1: 0.00
+Fábrica 14 -> Centro 2: 0.00
+Fábrica 14 -> Centro 3: 0.00
+Fábrica 14 -> Centro 4: 0.00
+Fábrica 14 -> Centro 5: 0.00
+Fábrica 14 -> Centro 6: 539.00
+Fábrica 14 -> Centro 7: 203.00
+Fábrica 14 -> Centro 8: 0.00
+Fábrica 14 -> Centro 9: 0.00
+Fábrica 14 -> Centro 10: 0.00
+Fábrica 15 -> Centro 1: 0.00
+Fábrica 15 -> Centro 2: 0.00
+Fábrica 15 -> Centro 3: 0.00
+Fábrica 15 -> Centro 4: 0.00
+Fábrica 15 -> Centro 5: 0.00
+Fábrica 15 -> Centro 6: 0.00
+Fábrica 15 -> Centro 7: 0.00
+Fábrica 15 -> Centro 8: 0.00
+Fábrica 15 -> Centro 9: 0.00
+Fábrica 15 -> Centro 10: 585.00
+
+### Resultado do Problema de Balanceamento de Produção ###
+Status: Optimization terminated successfully.
+Custo Total Ótimo: R$ 83180.00
+Tempo de Execução: 0.03 segundos
+Uso de Memória: 1.02 MB
+Fábrica 1 -> Centro 1: 0.00
+Fábrica 1 -> Centro 2: 0.00
+Fábrica 1 -> Centro 3: 0.00
+Fábrica 1 -> Centro 4: 0.00
+Fábrica 1 -> Centro 5: 0.00
+Fábrica 1 -> Centro 6: 0.00
+Fábrica 1 -> Centro 7: 0.00
+Fábrica 1 -> Centro 8: 0.00
+Fábrica 1 -> Centro 9: 0.00
+Fábrica 1 -> Centro 10: 0.00
+Fábrica 2 -> Centro 1: 0.00
+Fábrica 2 -> Centro 2: 437.00
+Fábrica 2 -> Centro 3: 0.00
+Fábrica 2 -> Centro 4: 0.00
+Fábrica 2 -> Centro 5: 0.00
+Fábrica 2 -> Centro 6: 0.00
+Fábrica 2 -> Centro 7: 0.00
+Fábrica 2 -> Centro 8: 0.00
+Fábrica 2 -> Centro 9: 547.00
+Fábrica 2 -> Centro 10: 0.00
+Fábrica 3 -> Centro 1: 0.00
+Fábrica 3 -> Centro 2: 0.00
+Fábrica 3 -> Centro 3: 0.00
+Fábrica 3 -> Centro 4: 0.00
+Fábrica 3 -> Centro 5: 0.00
+Fábrica 3 -> Centro 6: 0.00
+Fábrica 3 -> Centro 7: 0.00
+Fábrica 3 -> Centro 8: 0.00
+Fábrica 3 -> Centro 9: 0.00
+Fábrica 3 -> Centro 10: 0.00
+Fábrica 4 -> Centro 1: 0.00
+Fábrica 4 -> Centro 2: 0.00
+Fábrica 4 -> Centro 3: 0.00
+Fábrica 4 -> Centro 4: 0.00
+Fábrica 4 -> Centro 5: 0.00
+Fábrica 4 -> Centro 6: 0.00
+Fábrica 4 -> Centro 7: 0.00
+Fábrica 4 -> Centro 8: 0.00
+Fábrica 4 -> Centro 9: 0.00
+Fábrica 4 -> Centro 10: 0.00
+Fábrica 5 -> Centro 1: 113.00
+Fábrica 5 -> Centro 2: 0.00
+Fábrica 5 -> Centro 3: 773.00
+Fábrica 5 -> Centro 4: 0.00
+Fábrica 5 -> Centro 5: 0.00
+Fábrica 5 -> Centro 6: 0.00
+Fábrica 5 -> Centro 7: 0.00
+Fábrica 5 -> Centro 8: 362.00
+Fábrica 5 -> Centro 9: 0.00
+Fábrica 5 -> Centro 10: 0.00
+Fábrica 6 -> Centro 1: 0.00
+Fábrica 6 -> Centro 2: 319.00
+Fábrica 6 -> Centro 3: 0.00
+Fábrica 6 -> Centro 4: 0.00
+Fábrica 6 -> Centro 5: 96.00
+Fábrica 6 -> Centro 6: 0.00
+Fábrica 6 -> Centro 7: 0.00
+Fábrica 6 -> Centro 8: 0.00
+Fábrica 6 -> Centro 9: 0.00
+Fábrica 6 -> Centro 10: 87.00
+Fábrica 7 -> Centro 1: 0.00
+Fábrica 7 -> Centro 2: 0.00
+Fábrica 7 -> Centro 3: 0.00
+Fábrica 7 -> Centro 4: 0.00
+Fábrica 7 -> Centro 5: 0.00
+Fábrica 7 -> Centro 6: 0.00
+Fábrica 7 -> Centro 7: 327.00
+Fábrica 7 -> Centro 8: 343.00
+Fábrica 7 -> Centro 9: 0.00
+Fábrica 7 -> Centro 10: 0.00
+Fábrica 8 -> Centro 1: 664.00
+Fábrica 8 -> Centro 2: 0.00
+Fábrica 8 -> Centro 3: 0.00
+Fábrica 8 -> Centro 4: 227.00
+Fábrica 8 -> Centro 5: 0.00
+Fábrica 8 -> Centro 6: 0.00
+Fábrica 8 -> Centro 7: 0.00
+Fábrica 8 -> Centro 8: 0.00
+Fábrica 8 -> Centro 9: 0.00
+Fábrica 8 -> Centro 10: 0.00
+Fábrica 9 -> Centro 1: 0.00
+Fábrica 9 -> Centro 2: 0.00
+Fábrica 9 -> Centro 3: 0.00
+Fábrica 9 -> Centro 4: 0.00
+Fábrica 9 -> Centro 5: 0.00
+Fábrica 9 -> Centro 6: 0.00
+Fábrica 9 -> Centro 7: 0.00
+Fábrica 9 -> Centro 8: 0.00
+Fábrica 9 -> Centro 9: 0.00
+Fábrica 9 -> Centro 10: 0.00
+Fábrica 10 -> Centro 1: 0.00
+Fábrica 10 -> Centro 2: 0.00
+Fábrica 10 -> Centro 3: 0.00
+Fábrica 10 -> Centro 4: 0.00
+Fábrica 10 -> Centro 5: 0.00
+Fábrica 10 -> Centro 6: 0.00
+Fábrica 10 -> Centro 7: 0.00
+Fábrica 10 -> Centro 8: 0.00
+Fábrica 10 -> Centro 9: 0.00
+Fábrica 10 -> Centro 10: 0.00
+Fábrica 11 -> Centro 1: 0.00
+Fábrica 11 -> Centro 2: 0.00
+Fábrica 11 -> Centro 3: 0.00
+Fábrica 11 -> Centro 4: 0.00
+Fábrica 11 -> Centro 5: 659.00
+Fábrica 11 -> Centro 6: 0.00
+Fábrica 11 -> Centro 7: 0.00
+Fábrica 11 -> Centro 8: 0.00
+Fábrica 11 -> Centro 9: 0.00
+Fábrica 11 -> Centro 10: 0.00
+Fábrica 12 -> Centro 1: 0.00
+Fábrica 12 -> Centro 2: 0.00
+Fábrica 12 -> Centro 3: 0.00
+Fábrica 12 -> Centro 4: 0.00
+Fábrica 12 -> Centro 5: 0.00
+Fábrica 12 -> Centro 6: 0.00
+Fábrica 12 -> Centro 7: 0.00
+Fábrica 12 -> Centro 8: 0.00
+Fábrica 12 -> Centro 9: 0.00
+Fábrica 12 -> Centro 10: 0.00
+Fábrica 13 -> Centro 1: 0.00
+Fábrica 13 -> Centro 2: 0.00
+Fábrica 13 -> Centro 3: 0.00
+Fábrica 13 -> Centro 4: 0.00
+Fábrica 13 -> Centro 5: 0.00
+Fábrica 13 -> Centro 6: 0.00
+Fábrica 13 -> Centro 7: 0.00
+Fábrica 13 -> Centro 8: 0.00
+Fábrica 13 -> Centro 9: 0.00
+Fábrica 13 -> Centro 10: 0.00
+Fábrica 14 -> Centro 1: 0.00
+Fábrica 14 -> Centro 2: 0.00
+Fábrica 14 -> Centro 3: 0.00
+Fábrica 14 -> Centro 4: 0.00
+Fábrica 14 -> Centro 5: 0.00
+Fábrica 14 -> Centro 6: 539.00
+Fábrica 14 -> Centro 7: 203.00
+Fábrica 14 -> Centro 8: 0.00
+Fábrica 14 -> Centro 9: 0.00
+Fábrica 14 -> Centro 10: 0.00
+Fábrica 15 -> Centro 1: 0.00
+Fábrica 15 -> Centro 2: 0.00
+Fábrica 15 -> Centro 3: 0.00
+Fábrica 15 -> Centro 4: 0.00
+Fábrica 15 -> Centro 5: 0.00
+Fábrica 15 -> Centro 6: 0.00
+Fábrica 15 -> Centro 7: 0.00
+Fábrica 15 -> Centro 8: 0.00
+Fábrica 15 -> Centro 9: 0.00
+Fábrica 15 -> Centro 10: 585.00
