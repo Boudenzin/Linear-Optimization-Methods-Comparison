@@ -91,6 +91,9 @@ Os resultados da comparação são apresentados em tabelas e gráficos, destacan
 ![Gráfico de Comparação - Uso de Memória](imgs/uso_memoria_comparacao_colorido.png)  
 *Uso de memória dos métodos em diferentes cenários.*
 
+> 💡 Para alternar entre versões coloridas e preto-e-branco nos gráficos, os scripts permitem modificar os parâmetros de cor com facilidade (veja comentários nos arquivos de geração de gráficos).
+
+
 ---
 
 ## **Licença**
