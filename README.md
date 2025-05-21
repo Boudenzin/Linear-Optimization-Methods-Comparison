@@ -10,11 +10,12 @@ Este repositório contém o código e os recursos utilizados no artigo **"Compar
 ## **Sumário**
 1. [Visão Geral](#visão-geral)
 2. [Métodos Implementados](#métodos-implementados)
-3. [Instalação](#instalação)
-4. [Uso](#uso)
-5. [Resultados](#resultados)
-6. [Licença](#licença)
-7. [Contato](#contato)
+3. [Problemas Detalhados](#problemas-detalhados)
+4. [Instalação](#instalação)
+5. [Uso](#uso)
+6. [Resultados](#resultados)
+7. [Licença](#licença)
+8. [Contato](#contato)
 
 ---
 
@@ -35,6 +36,13 @@ O repositório inclui scripts em Python para gerar problemas de PL, resolver pro
 ### **2. Método Big M**
 - Implementado manualmente usando a biblioteca PuLP, com o solver CBC.
 - Inclui penalizações para variáveis artificiais, garantindo que sejam eliminadas da solução ótima.
+
+---
+
+## Problemas Detalhados
+
+Para detalhes completos das formulações matemáticas dos três problemas utilizados nos testes, incluindo funções objetivo, restrições e soluções ótimas, consulte o arquivo [problemas_detalhados.md](problemas_detalhados.md).
+
 
 ---
 
