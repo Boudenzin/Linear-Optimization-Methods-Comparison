@@ -30,6 +30,10 @@ def problema_2_robusto_big_m():
     A = np.random.randint(-3, 8, size=(n_restricoes, n_vars))
     b = np.random.randint(100, 500, size=n_restricoes)
 
+    np.savetxt('matriz_A_2.csv', A, delimiter=',', fmt='%d')
+    np.savetxt('lado_b_2.csv', b, delimiter=',', fmt='%d')
+    np.savetxt('custos_2.csv', custos, delimiter=',', fmt='%d')
+
     sinais = ['<='] * (n_restricoes // 2) + ['>='] * (n_restricoes // 2)
 
     # -----------------------------

@@ -35,6 +35,9 @@ def problema_1_melhorado_big_m():
 
     # Lado direito
     b = np.random.randint(10, 100, size=n_restricoes)
+    print("A:", A)
+    print("B", b)
+    print("c:", c)
 
     # Metade das restrições será ≤, metade ≥
     sentidos = ['<='] * (n_restricoes // 2) + ['>='] * (n_restricoes // 2)
