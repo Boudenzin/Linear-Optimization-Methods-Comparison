@@ -51,10 +51,6 @@ Este problema é **viável e possui solução ótima única**, o que o torna ide
 
 ---
 
-Sim, posso te ajudar com isso! Para transformar esses dados em uma boa visualização no seu Markdown, recomendo a seguinte organização por seções, com base nos três componentes do problema: custos (função objetivo), restrições (matriz A e lado direito), e variáveis de decisão. Aqui vai um esboço de como formatar isso:
-
----
-
 ## 🧪 Teste 2 — Problema de Alocação Robusta
 
 ### **Função Objetivo**
@@ -117,10 +113,6 @@ x₁, x₂, ..., x₆₀ ≥ 0
 * As restrições foram balanceadas entre desigualdades `≤` e `≥`, convertidas para igualdade com uso de variáveis artificiais (Big M).
 * A geração dos coeficientes foi feita via `numpy.random.seed(1)` para garantir **reprodutibilidade total**.
 * Este modelo simula um problema realista de alocação de recursos com múltiplos centros de decisão.
-
----
-
-Claro! Aqui está sua descrição do **Problema 3** formatada adequadamente para Markdown — ideal para inserir no seu `README.md` ou em outro arquivo `.md` no GitHub:
 
 ---
 
