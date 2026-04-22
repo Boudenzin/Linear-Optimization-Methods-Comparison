@@ -1,107 +1,134 @@
 # Importação das bibliotecas
 import numpy as np
-import pulp
 import time
-import psutil
-import os
+import tracemalloc
+import statistics
+import lpp_solver
+from lpp_solver import big_M
 
-def problema_1_melhorado_big_m():
+def preparar_dados_para_lpp_solver(c, A, b, extra_coefficient_matrix, maximization='max'):
+    """
+    Prepara os dados no formato esperado pelo lpp_solver.big_M()
+    
+    Parâmetros:
+    - c: lista de coeficientes da função objetivo (tamanho n_vars)
+    - A: matriz de coeficientes das restrições (n_restricoes x n_vars)
+    - b: lado direito das restrições (tamanho n_restricoes)
+    - extra_coefficient_matrix: lista de pares [coef_folga, coef_artificial] para cada restrição
+      * [1, 0] para '≤' (adiciona variável de folga, sem artificial)
+      * [-1, 1] para '≥' (adiciona surplus negativa + artificial)
+      * [0, 1] para '=' (adiciona artificial)
+    - maximization: 'max' ou 'min'
+    
+    Retorna:
+    - c_mod: função objetivo com coeficientes zerados para folgas e -M para artificiais (maximização)
+    - val: matriz aumentada do sistema (incluindo folgas e artificiais)
+    - b: lado direito (inalterado)
+    - no_of_variables: número original de variáveis
+    - extra_coefficient_matrix: inalterado
+    """
+    m = len(A)  # número de restrições
+    n = len(c)  # número de variáveis originais
+    M = 1000000  # mesmo valor definido no lpp_solver
+    
+    # 1. Modifica função objetivo para incluir folgas (coef 0) e artificiais
+    if maximization == 'max':
+        # Para maximização: artificiais têm coeficiente -M (penalidade negativa)
+        coef_artificial = -M
+    else:  # min
+        # Para minimização: o solver converte internamente para maximização
+        # Portanto, artificiais devem ter coeficiente +M (será negativado na conversão)
+        coef_artificial = M
+    
+    # Coeficientes: [variáveis originais] + [folgas com 0] + [artificiais com coef_artificial]
+    c_mod = list(c) + [0] * m + [coef_artificial] * m
+    
+    # 2. Constrói a matriz aumentada val
+    # Inicializa com zeros para colunas de folgas e artificiais
+    val = [row[:] + [0] * (2 * m) for row in A]
+    
+    # Preenche as colunas de folgas e artificiais baseado no extra_coefficient_matrix
+    for i in range(m):
+        # Coluna da variável de folga (posição n + i)
+        val[i][n + i] = extra_coefficient_matrix[i][0]
+        # Coluna da variável artificial (posição n + m + i)
+        val[i][n + m + i] = extra_coefficient_matrix[i][1]
+    
+    return c_mod, val, b, n, extra_coefficient_matrix
+
+
+
+
+
+def problema_1_bigm():
     """
     Problema 1 (pequena escala) com 10 variáveis e 8 restrições, resolvido com Big M.
     Adiciona variáveis artificiais para restrições do tipo 'maior ou igual' (≥) e penaliza na função objetivo.
     """
 
-    # -----------------------------
-    # Iniciar medições
-    # -----------------------------
-    start_time = time.time()
-    process = psutil.Process(os.getpid())
-    mem_before = process.memory_info().rss / (1024 ** 2)  # Em MB
-
-    # -----------------------------
-    # Geração dos dados do problema (mesmos da versão Revised)
-    # -----------------------------
+    # Geração de dados (fixar seed para reprodutibilidade)
     np.random.seed(101)
-
-    n_vars = 10
-    n_restricoes = 8
-    M = 10000  # Valor grande para penalizar variáveis artificiais
-
-    # Função objetivo (custos)
+    n_vars, n_restricoes = 10, 8
     c = np.random.randint(1, 20, size=n_vars)
-
-    # Matriz de coeficientes das restrições
     A = np.random.randint(-5, 10, size=(n_restricoes, n_vars))
-
-    # Lado direito
     b = np.random.randint(10, 100, size=n_restricoes)
-    print("A:", A)
-    print("B", b)
-    print("c:", c)
-
-    # Metade das restrições será ≤, metade ≥
     sentidos = ['<='] * (n_restricoes // 2) + ['>='] * (n_restricoes // 2)
+    
+    extra_coefficient_matrix = [[1, 0] if s == '<=' else [-1, 1] for s in sentidos]
+    
+    
+    c_mod, val, b_list, n_orig, extra_m = preparar_dados_para_lpp_solver(
+        c.tolist(), A.tolist(), b.tolist(), extra_coefficient_matrix, maximization='max'
+    )
 
-    # -----------------------------
-    # Modelagem com PuLP
-    # -----------------------------
-    prob = pulp.LpProblem("Problema_1_Melhorado_BigM", pulp.LpMinimize)
 
-    # Variáveis de decisão
-    x_vars = [pulp.LpVariable(f"x{i+1}", lowBound=0) for i in range(n_vars)]
+    # --- INÍCIO DA MEDIÇÃO ---
 
-    # Lista de variáveis artificiais
-    artificiais = []
+    K_INTERACOES = 500
+    # K_INTERACOES = 1 
+    tracemalloc.start()
+    start_perf = time.perf_counter()
+    start_cpu = time.process_time()
 
-    # Função objetivo inicial (custos das variáveis de decisão)
-    objetivo = pulp.lpSum([c[i] * x_vars[i] for i in range(n_vars)])
+    # Execução do Solver
+    lpp_solver.maximization = 'max'
+    # Silenciamos prints internos do solver para não sujar o log/influenciar tempo
+    for _ in range(K_INTERACOES):
+        lpp_solver.big_M(c_mod, val, b_list, n_orig, extra_coefficient_matrix)
+    
+    end_cpu = time.process_time()
+    end_perf = time.perf_counter()
+    _, peak_mem = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    # --- FIM DA MEDIÇÃO ---
 
-    # Adiciona as restrições e variáveis artificiais
-    for j in range(n_restricoes):
-        expr = pulp.lpSum([A[j][i] * x_vars[i] for i in range(n_vars)])
+    return {
+        "wall_time": end_perf - start_perf,
+        "cpu_time": end_cpu - start_cpu,
+        "peak_mem_mb": peak_mem / (1024 * 1024)
+    }
 
-        if sentidos[j] == '<=':
-            prob += expr <= b[j], f"Restricao_{j+1}"
-        else:
-            # Para restrições do tipo '>=', adicione:
-            s = pulp.LpVariable(f"s{j+1}", lowBound=0)  # Variável de folga negativa (surplus)
-            a = pulp.LpVariable(f"a{j+1}", lowBound=0)  # Variável artificial
-            prob += expr - s + a == b[j]  # Restrição convertida para igualdade
-            objetivo += M * a  # Penalização da artificial
+if __name__ == "__main__":
+    N_EXECUCOES = 30
+    resultados = {"wall": [], "cpu": [], "mem": []}
 
-    # Define função objetivo com penalidade
-    prob += objetivo
+    print(f"Iniciando benchmark: {N_EXECUCOES} execuções...")
 
-    # -----------------------------
-    # Resolução
-    # -----------------------------
-    prob.solve(pulp.PULP_CBC_CMD(msg=False))
+    for i in range(N_EXECUCOES):
+        res = problema_1_bigm()
+        resultados["wall"].append(res["wall_time"])
+        resultados["cpu"].append(res["cpu_time"])
+        resultados["mem"].append(res["peak_mem_mb"])
 
-    # -----------------------------
-    # Coleta de desempenho
-    # -----------------------------
-    end_time = time.time()
-    mem_after = process.memory_info().rss / (1024 ** 2)
-    memoria_usada = mem_after - mem_before
-    tempo_execucao = end_time - start_time
-
-    # -----------------------------
-    # Impressão dos resultados
-    # -----------------------------
-    print("\n### Resultado - Problema 1 Melhorado (Big M Manual) ###")
-    print(f"Status: {pulp.LpStatus[prob.status]}")
-    print(f"Valor ótimo: {pulp.value(prob.objective):.2f}")
-    print(f"Tempo de execução: {tempo_execucao:.4f} segundos")
-    print(f"Uso de memória: {memoria_usada:.4f} MB")
-
-    # Valores das variáveis de decisão
-    for i, var in enumerate(x_vars):
-        print(f"{var.name} = {var.varValue:.4f}")
-
-    # Verificar variáveis artificiais
-    for a in artificiais:
-        if a.varValue > 1e-5:
-            print(f"⚠️ Variável artificial {a.name} > 0 ({a.varValue:.4f}) → Solução pode não ser viável sem Big M.")
-
-# Executar
-problema_1_melhorado_big_m()
+    print("\n" + "="*40)
+    print("RELATÓRIO ACADÊMICO DE PERFORMANCE")
+    print("="*40)
+    for metrica, valores in resultados.items():
+        media = statistics.mean(valores)
+        desvio = statistics.stdev(valores)
+        print(f"{metrica.upper()}:")
+        print(f"  Média: {media:.6f}")
+        print(f"  Desvio Padrão: {desvio:.6f}")
+        print(f"  RSD (Variabilidade): {(desvio/media)*100:.2f}%")
+        print("-" * 20)
+    print()

@@ -1,5 +1,1 @@
-psutil
-setuptools
-scipy
-pulp
-matplotlib
+pip install numpy psutil scipy

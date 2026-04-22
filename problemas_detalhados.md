@@ -5,7 +5,7 @@ Este documento contém os coeficientes completos dos problemas de programação 
 
 ## 🔹 **Teste 1 — Problema de Alocação Linear (10 variáveis, 8 restrições)**
 
-Este problema foi desenvolvido com o objetivo de testar o desempenho computacional dos métodos em um **cenário simples, porém suficientemente complexo** para demonstrar diferenças entre os algoritmos. Trata-se de um problema de **minimização de custos de produção**, com 10 variáveis de decisão contínuas e não negativas, sujeitas a 8 restrições lineares (sendo 4 do tipo `≤` e 4 do tipo `≥`).
+Este problema foi desenvolvido com o objetivo de testar o desempenho computacional dos métodos em um **cenário simples, porém suficientemente complexo** para demonstrar diferenças entre os algoritmos. Trata-se de um problema de **maximização de custos de produção**, com 10 variáveis de decisão contínuas e não negativas, sujeitas a 8 restrições lineares (sendo 4 do tipo `≤` e 4 do tipo `≥`).
 
 A **função objetivo** é dada por:
 
@@ -43,11 +43,8 @@ $$
 
 A **solução ótima** encontrada (com ambos os métodos) é:
 
-* **Valor ótimo:** \$Z = 85{,}29\$
-* **Variáveis com valor não nulo:**
-  $x_1 = 1{,}8571 \quad \text{e} \quad x_8 = 7{,}0000$
+* **Valor ótimo:** \$Z = 12015\$
 
-Este problema é **viável e possui solução ótima única**, o que o torna ideal para comparação de desempenho em termos de tempo de execução, memória utilizada e comportamento das variáveis artificiais no método Big M.
 
 ---
 
@@ -55,7 +52,7 @@ Este problema é **viável e possui solução ótima única**, o que o torna ide
 
 ### **Função Objetivo**
 
-**Minimizar:**
+**Maximizar:**
 
 $$
 Z = c_1x_1 + c_2x_2 + \dots + c_{60}x_{60}
@@ -105,14 +102,6 @@ Todas as variáveis são contínuas e não-negativas:
 x₁, x₂, ..., x₆₀ ≥ 0
 ```
 
----
-
-### 💡 Observações Técnicas
-
-* O problema é do tipo **minimização**.
-* As restrições foram balanceadas entre desigualdades `≤` e `≥`, convertidas para igualdade com uso de variáveis artificiais (Big M).
-* A geração dos coeficientes foi feita via `numpy.random.seed(1)` para garantir **reprodutibilidade total**.
-* Este modelo simula um problema realista de alocação de recursos com múltiplos centros de decisão.
 
 ---
 
@@ -138,7 +127,7 @@ Total de variáveis: $15 \times 10 = 150$.
 
 ### **Função Objetivo**
 
-**Minimizar o custo total de transporte:**
+**Maximizar o custo total de transporte:**
 
 $$
 Z = \sum_{i=1}^{15} \sum_{j=1}^{10} c_{ij} \cdot x_{ij}

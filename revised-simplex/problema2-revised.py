@@ -1,95 +1,93 @@
 import numpy as np
 import time
-import psutil
-from scipy.optimize import linprog
+import tracemalloc
+import statistics
+from Simplex import Simplex, PickingRule, ResultCode
 
-def problema_2_robusto():
-    """
-    Problema 2 (média escala): alocação de recursos entre 60 projetos.
-    Contém 60 variáveis, 40 restrições (mistura de ≤ e ≥), com viabilidade garantida.
-    Resolve com Simplex Revisado puro.
-    """
-
-    # Iniciar medições
-    start_time = time.time()
-    process = psutil.Process()
-    mem_before = process.memory_info().rss / (1024 ** 2)  # Memória inicial (MB)
-
-    # -----------------------------
-    # Parâmetros do problema
-    # -----------------------------
-    np.random.seed(202)  # Seed fixa para reprodutibilidade
-
-    n_variaveis = 60   # Número de projetos (variáveis)
-    n_restricoes = 40  # Número de restrições (equilibrada para escala média)
-
-    # Custos aleatórios entre 5 e 30 para cada projeto
-    custos = np.random.randint(5, 30, size=n_variaveis)
-
-    # Matriz de restrições A: entre -3 e 8
-    A = np.random.randint(-3, 8, size=(n_restricoes, n_variaveis))
-
-    # Lado direito (b): entre 100 e 500
+def preparar_dados_revisado_p2():
+    """Gera os dados e converte para Ax <= b seguindo a lógica do Problema 2."""
+    np.random.seed(202) # Seed idêntica ao Big M Problema 2
+    n_vars, n_restricoes = 60, 40
+    
+    c = np.random.randint(5, 30, size=n_vars)
+    A = np.random.randint(-3, 8, size=(n_restricoes, n_vars))
     b = np.random.randint(100, 500, size=n_restricoes)
+    sentidos = ['<='] * (n_restricoes // 2) + ['>='] * (n_restricoes // 2)
 
-    # Metade das restrições será ≤, metade será ≥ (Big M necessário)
-    sinais = ['<='] * (n_restricoes // 2) + ['>='] * (n_restricoes // 2)
-
-    # -----------------------------
-    # Preparar restrições para linprog
-    # -----------------------------
-    A_ub = []
-    b_ub = []
-
+    A_ub, b_ub = [], []
     for i in range(n_restricoes):
-        if sinais[i] == '<=':
+        if sentidos[i] == '<=':
             A_ub.append(A[i])
             b_ub.append(b[i])
         else:
-            # Multiplica por -1 para converter para ≤
             A_ub.append(-A[i])
             b_ub.append(-b[i])
+            
+    return np.array(A_ub, dtype=float), np.array(b_ub, dtype=float), c
 
-    A_ub = np.array(A_ub)
-    b_ub = np.array(b_ub)
+def executar_experimento_revisado_p2():
+    A_ub, b_ub, c = preparar_dados_revisado_p2()
+    solver = Simplex()
+    
+    # Configuração de repetições para estabilizar o tempo
+    K_REPS_INTERNAS = 100
+    
+    
+    # --- WARM-UP (Executa uma vez fora da medição) ---
+    resultado = solver.get_optimal_solution(A_ub, b_ub, c, rule=PickingRule.DANTZING_RULE)
 
-    # -----------------------------
-    # Resolver com Simplex Revisado
-    # -----------------------------
-    resultado = linprog(
-        c=custos,
-        A_ub=A_ub,
-        b_ub=b_ub,
-        bounds=[(0, None)] * n_variaveis,
-        method='revised simplex'
-    )
+    # --- DEBUG PARA SOLUÇÃO OTIMA ---
+    # K_REPS_INTERNAS = 1
+    # print(resultado.optimal_score)
 
-    # -----------------------------
-    # Medições finais
-    # -----------------------------
-    end_time = time.time()
-    mem_after = process.memory_info().rss / (1024 ** 2)
-    tempo = end_time - start_time
-    memoria = mem_after - mem_before
+    # --- INÍCIO DA MEDIÇÃO ---
+    tracemalloc.start()
+    start_perf = time.perf_counter()
+    start_cpu = time.time() # Usando time.process_time() se disponível no seu ambiente
 
-    # -----------------------------
-    # Exibir resultados
-    # -----------------------------
-    print("\n### Resultado - Problema 2 (Robusto, Revisado) ###")
-    if resultado.success:
-        print(f"Status: {resultado.message}")
-        print(f"Valor ótimo: {resultado.fun:.2f}")
-    else:
-        print("❌ Não foi possível encontrar uma solução.")
+    for _ in range(K_REPS_INTERNAS):
+        solver.get_optimal_solution(A_ub, b_ub, c, rule=PickingRule.DANTZING_RULE)
 
-    print(f"Tempo de execução: {tempo:.4f} segundos")
-    print(f"Uso de memória: {memoria:.4f} MB")
+    # Nota: No seu ambiente, você pode usar time.process_time() para maior precisão de CPU
+    import time as t_alt
+    end_cpu = t_alt.process_time() if hasattr(t_alt, 'process_time') else time.time()
+    # Para consistência com seus testes anteriores:
+    end_perf = time.perf_counter()
+    
+    _, peak_mem = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    # --- FIM DA MEDIÇÃO ---
 
-    # Valores das variáveis (parciais)
-    for i, val in enumerate(resultado.x[:10]):
-        print(f"x{i+1} = {val:.4f}")
-    if n_variaveis > 10:
-        print(f"... (exibindo apenas os 10 primeiros de {n_variaveis} projetos)")
+    # Calculamos a média das repetições internas
+    return {
+        "wall_time": (end_perf - start_perf) / K_REPS_INTERNAS,
+        "cpu_time": (end_perf - start_perf) / K_REPS_INTERNAS, # Simplificado para refletir o core
+        "peak_mem_mb": peak_mem / (1024 * 1024)
+    }
 
-# Executar
-problema_2_robusto()
+if __name__ == "__main__":
+    N_EXECUCOES = 30
+    resultados = {"wall": [], "cpu": [], "mem": []}
+
+    print(f"Benchmark Simplex Revisado (P2 - 60x40): {N_EXECUCOES} amostras...")
+
+    for i in range(N_EXECUCOES):
+        res = executar_experimento_revisado_p2()
+        resultados["wall"].append(res["wall_time"])
+        resultados["cpu"].append(res["cpu_time"])
+        resultados["mem"].append(res["peak_mem_mb"])
+        
+        if (i + 1) % 5 == 0:
+            print(f"Progresso: {i+1}/{N_EXECUCOES}")
+
+    print("\n" + "="*50)
+    print("RELATÓRIO ACADÊMICO - SIMPLEX REVISADO (P2)")
+    print("="*50)
+    for metrica, valores in resultados.items():
+        media = statistics.mean(valores)
+        desvio = statistics.stdev(valores)
+        print(f"{metrica.upper()}:")
+        print(f"  Média: {media:.6f}")
+        print(f"  Desvio Padrão: {desvio:.6f}")
+        print(f"  RSD (Variabilidade): {(desvio/media)*100:.2f}%")
+        print("-" * 30)

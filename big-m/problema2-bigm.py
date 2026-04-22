@@ -1,103 +1,88 @@
 import numpy as np
-import pulp
 import time
-import psutil
-import os
+import tracemalloc
+import statistics
+import lpp_solver
+from lpp_solver import big_M
 
-def problema_2_robusto_big_m():
-    """
-    Problema 2 (média escala) com 60 variáveis e 40 restrições, resolvido com Big M.
-    Adiciona variáveis artificiais nas restrições do tipo 'maior ou igual' e penaliza na função objetivo.
-    """
 
-    # -----------------------------
-    # Início da medição
-    # -----------------------------
-    start_time = time.time()
-    process = psutil.Process(os.getpid())
-    mem_before = process.memory_info().rss / (1024 ** 2)  # Em MB
+def preparar_dados_para_lpp_solver(c, A, b, extra_coefficient_matrix, maximization='max'):
+    m, n = len(A), len(c)
+    M = 1000000
+    coef_artificial = -M if maximization == 'max' else M
+    c_mod = list(c) + [0] * m + [coef_artificial] * m
+    val = [row[:] + [0] * (2 * m) for row in A]
+    for i in range(m):
+        val[i][n + i] = extra_coefficient_matrix[i][0]
+        val[i][n + m + i] = extra_coefficient_matrix[i][1]
+    return c_mod, val, b, n, extra_coefficient_matrix
 
-    # -----------------------------
-    # Geração de dados consistentes
-    # -----------------------------
+def executar_experimento_problema_2():
+    # --- GERAÇÃO DE DADOS 
     np.random.seed(202)
-
-    n_vars = 60
-    n_restricoes = 40
-    M = 10000  # Penalidade para variáveis artificiais
-
+    n_vars, n_restricoes = 60, 40
     custos = np.random.randint(5, 30, size=n_vars)
     A = np.random.randint(-3, 8, size=(n_restricoes, n_vars))
     b = np.random.randint(100, 500, size=n_restricoes)
-
-    np.savetxt('matriz_A_2.csv', A, delimiter=',', fmt='%d')
-    np.savetxt('lado_b_2.csv', b, delimiter=',', fmt='%d')
-    np.savetxt('custos_2.csv', custos, delimiter=',', fmt='%d')
-
     sinais = ['<='] * (n_restricoes // 2) + ['>='] * (n_restricoes // 2)
+    
+    extra_coefficient_matrix = []
+    for sentido in sinais:
+        if sentido == '<=': extra_coefficient_matrix.append([1, 0])
+        elif sentido == '>=': extra_coefficient_matrix.append([-1, 1])
+        else: extra_coefficient_matrix.append([0, 1])
 
-    # -----------------------------
-    # Modelagem com PuLP
-    # -----------------------------
-    prob = pulp.LpProblem("Problema_2_Robusto_BigM", pulp.LpMinimize)
+    c_mod, val, b_list, no_vars, extra_m = preparar_dados_para_lpp_solver(
+        custos.tolist(), A.tolist(), b.tolist(), extra_coefficient_matrix, maximization='max'
+    )
 
-    # Variáveis de decisão (x1 a x60)
-    x = [pulp.LpVariable(f"x{i+1}", lowBound=0) for i in range(n_vars)]
+    # --- CONFIGURAÇÃO DO BENCHMARK ---
+    K_REPS_INTERNAS = 1
+    lpp_solver.maximization = 'max'
 
-    # Variáveis artificiais (só nas restrições do tipo ≥)
-    artificiais = []
+    # Warm-up (essencial para carregar bibliotecas na RAM)
+    big_M(c_mod, val, b_list, no_vars, extra_coefficient_matrix)
 
-    # Função objetivo inicial
-    objetivo = pulp.lpSum([custos[i] * x[i] for i in range(n_vars)])
+    # --- MEDIÇÃO ---
+    tracemalloc.start()
+    start_perf = time.perf_counter()
+    start_cpu = time.process_time()
 
-    # Adição de restrições e construção da função objetivo com Big M
-    for i in range(n_restricoes):
-        expr = pulp.lpSum([A[i][j] * x[j] for j in range(n_vars)])
+    for _ in range(K_REPS_INTERNAS):
+        big_M(c_mod, val, b_list, no_vars, extra_coefficient_matrix)
 
-        if sinais[i] == '<=':
-            prob += expr <= b[i], f"Restricao_{i+1}"
-        else:
-            s = pulp.LpVariable(f"s{i+1}", lowBound=0)  # Surplus
-            a = pulp.LpVariable(f"a{i+1}", lowBound=0)  # Artificial
-            artificiais.append(a)
-            prob += expr - s + a == b[i], f"Restricao_{i+1}"
-            objetivo += M * a
+    end_cpu = time.process_time()
+    end_perf = time.perf_counter()
+    _, peak_mem = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
 
-    # Define função objetivo com penalidades
-    prob += objetivo
+    return {
+        "wall_time": (end_perf - start_perf) / K_REPS_INTERNAS,
+        "cpu_time": (end_cpu - start_cpu) / K_REPS_INTERNAS,
+        "peak_mem_mb": peak_mem / (1024 * 1024)
+    }
 
-    # -----------------------------
-    # Resolução com CBC
-    # -----------------------------
-    prob.solve(pulp.PULP_CBC_CMD(msg=False))
+if __name__ == "__main__":
+    N_AMOSTRAS = 30
+    resultados = {"wall": [], "cpu": [], "mem": []}
 
-    # -----------------------------
-    # Medição final
-    # -----------------------------
-    end_time = time.time()
-    mem_after = process.memory_info().rss / (1024 ** 2)
-    tempo = end_time - start_time
-    memoria = mem_after - mem_before
+    print(f"Iniciando Benchmark Problema 2 (60x40): {N_AMOSTRAS} amostras...")
 
-    # -----------------------------
-    # Impressão dos resultados
-    # -----------------------------
-    print("\n### Resultado - Problema 2 Robusto (Big M Manual) ###")
-    print(f"Status: {pulp.LpStatus[prob.status]}")
-    print(f"Valor ótimo: {pulp.value(prob.objective):.2f}")
-    print(f"Tempo de execução: {tempo:.4f} segundos")
-    print(f"Uso de memória: {memoria:.4f} MB")
+    for i in range(N_AMOSTRAS):
+        res = executar_experimento_problema_2()
+        resultados["wall"].append(res["wall_time"])
+        resultados["cpu"].append(res["cpu_time"])
+        resultados["mem"].append(res["peak_mem_mb"])
+        if (i+1) % 5 == 0: print(f"Progresso: {i+1}/{N_AMOSTRAS}")
 
-    # Mostrar primeiras variáveis
-    for var in x[:10]:
-        print(f"{var.name} = {var.varValue:.4f}")
-    if len(x) > 10:
-        print(f"... (exibindo apenas os 10 primeiros de {len(x)} variáveis)")
-
-    # Checagem das artificiais
-    for a in artificiais:
-        if a.varValue > 1e-5:
-            print(f"⚠️ Variável artificial {a.name} = {a.varValue:.4f} → Solução pode não ser viável sem Big M.")
-
-# Executar
-problema_2_robusto_big_m()
+    print("\n" + "="*50)
+    print("RELATÓRIO ACADÊMICO - BIG M (PROBLEMA 2 - 60x40)")
+    print("="*50)
+    for metrica, valores in resultados.items():
+        media = statistics.mean(valores)
+        desvio = statistics.stdev(valores)
+        print(f"{metrica.upper()}:")
+        print(f"  Média: {media:.6f}")
+        print(f"  Desvio Padrão: {desvio:.6f}")
+        print(f"  RSD (Variabilidade): {(desvio/media)*100:.2f}%")
+        print("-" * 30)
