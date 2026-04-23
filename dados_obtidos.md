@@ -15,11 +15,11 @@
 - **MEM (Pico):** Média 0.024495 MB | RSD 2.17%
 - **TEMPO UNITÁRIO (NORMALIZADO): 0.009476 segundos**
 
-**1.2 RELATÓRIO: SIMPLEX REVISADO (30 amostras, 100 repetições internas)**
-- **WALL (Bloco):** Média 0.004199s | RSD 7.71%
-- **CPU (Bloco):** Média 0.004198s | RSD 7.71%
-- **MEM (Pico):** Média 0.011164 MB | RSD 7.07%
-- **TEMPO UNITÁRIO (NORMALIZADO): 0.000042 segundos**
+**1.2 RELATÓRIO: SIMPLEX REVISADO (30 amostras, 500 repetições internas)**
+- **WALL (Bloco):** Média  0.004076s | RSD 7.37%
+- **CPU (Bloco):** Média 0.004075s | RSD 7.71%
+- **MEM (Pico):** Média 0.011195 MB | RSD 7.91%
+- **TEMPO UNITÁRIO (NORMALIZADO): 0,00000815 segundos**
 
 ---
 
@@ -32,11 +32,11 @@
 - **MEM (Pico):** Média 0.392227 MB | RSD 0.00%
 - **TEMPO UNITÁRIO: 4.407365 segundos**
 
-**2.2 RELATÓRIO: SIMPLEX REVISADO (30 amostras, 100 repetições internas)**
-- **WALL (Bloco):** Média 0.024978s | RSD 2.57%
-- **CPU (Bloco):** Média 0.024978s | RSD 2.57%
-- **MEM (Pico):** Média 0.121892 MB | RSD 0.63%
-- **TEMPO UNITÁRIO (NORMALIZADO): 0.000250 segundos**
+**2.2 RELATÓRIO: SIMPLEX REVISADO (30 amostras, 1 execução por amostra)**
+- **WALL (Bloco):** Média 0.039381s | RSD 7.61%
+- **CPU (Bloco):** Média 0.039381s | RSD 7.61%
+- **MEM (Pico):** Média 0.121483 MB | RSD 0.00%
+- **TEMPO UNITÁRIO : 0.039381s segundos**
 
 ---
 

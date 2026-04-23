@@ -36,7 +36,7 @@ def executar_experimento_revisado():
     # print(resultado.optimal_score)
 
 
-    K_INTERACOES = 100
+    K_INTERACOES = 1
     # K_INTERACOES = 1
     
     # --- INÍCIO DA MEDIÇÃO ---
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     N_EXECUCOES = 30
     resultados = {"wall": [], "cpu": [], "mem": []}
 
-    print(f"Iniciando benchmark Simplex Revisado: {N_EXECUCOES} amostras (100 reps cada)...")
+    print(f"Iniciando benchmark Simplex Revisado: {N_EXECUCOES} amostras (1000 reps cada)...")
 
     for i in range(N_EXECUCOES):
         res = executar_experimento_revisado()

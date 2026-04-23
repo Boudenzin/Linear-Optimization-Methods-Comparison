@@ -30,7 +30,7 @@ def executar_experimento_revisado_p2():
     solver = Simplex()
     
     # Configuração de repetições para estabilizar o tempo
-    K_REPS_INTERNAS = 100
+    K_REPS_INTERNAS = 1
     
     
     # --- WARM-UP (Executa uma vez fora da medição) ---
