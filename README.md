@@ -23,8 +23,8 @@ docker run --rm --cpus="1.0" --memory="512m" --name run_benchmark simplex-compar
 
 ## **Sumário**
 1. [Visão Geral](#visão-geral)
-2. [Métodos Implementados](#metodologia-de-benchmark)
-3. [Métodos Implementados](#metodos-implementados)
+2. [Metodologia Utilizada](#metodologia-de-benchmark)
+3. [Métodos Utilizados](#metodos-implementados)
 3. [Problemas Detalhados](#problemas-detalhados)
 4. [Instalação](#instalação)
 5. [Uso](#uso)
@@ -57,17 +57,19 @@ Diferente de testes convencionais, este repositório utiliza uma metodologia de 
 
 ---
 
-## **Métodos Implementados**
+## **Métodos Utilizados**
 
 ### **1. Método Simplex Revisado**
 
   - Implementação baseada em bibliotecas de alto desempenho como `scipy.linalg` e `numpy`.
   - Foco em problemas de média e grande escala.
+  - **Implementação utilizada**: https://github.com/jyuv/RevisedSimplex
 
 ### **2. Método Big M**
 
   - Implementação customizada para fins de benchmark acadêmico.
   - Ajustada para evitar saídas de console (*logs* de iteração) que possam interferir na medição de tempo e memória.
+  - **Implementação utilizada**: https://github.com/hammadali1805/LPP_Solver_Big_M
 
 -----
 
